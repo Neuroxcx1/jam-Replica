@@ -14,12 +14,17 @@ public static class EffectsBuilder
     {
         public Material cloneMaterial;
         public Material bodyMaterial;
+        public Material afterimageMaterial;
         public ParticleSystem walkDust;
         public GameObject jumpDust;
         public GameObject landDust;
         public GameObject death;
         public GameObject respawn;
         public GameObject solidify;
+        public GameObject speedLines;
+        public GameObject cloneImpact;
+        public GameObject absorb;
+        public RecallGhost recallGhost;
         public SplitEffect split;
         public BodyEffect freeze;
         public BodyEffect corpse;
@@ -64,7 +69,8 @@ public static class EffectsBuilder
             cloneMaterial = ReplicaMaterial("Replica_Clone", replica, DeepRed, Skin, White, Red,
                 scan: 0.3f, shine: 0f, flicker: 0.12f, opacity: 0.85f),
             bodyMaterial = ReplicaMaterial("Replica_Body", replicaLit, new Color(0.35f, 0.12f, 0.12f), new Color(0.78f, 0.55f, 0.48f),
-                new Color(0.95f, 0.85f, 0.8f), new Color(0.42f, 0.12f, 0.12f), scan: 0f, shine: 0f, flicker: 0f, opacity: 1f)
+                new Color(0.95f, 0.85f, 0.8f), new Color(0.42f, 0.12f, 0.12f), scan: 0f, shine: 0f, flicker: 0f, opacity: 1f),
+            afterimageMaterial = AssetDatabase.LoadAssetAtPath<Material>("Packages/com.unity.render-pipelines.universal/Runtime/Materials/Sprite-Unlit-Default.mat")
         };
         Material frozen = ReplicaMaterial("Replica_Frozen", replicaLit, new Color(0.18f, 0.38f, 0.7f), new Color(0.55f, 0.82f, 0.97f),
             new Color(0.92f, 0.99f, 1f), new Color(0.97f, 1f, 1f), scan: 0f, shine: 0.8f, flicker: 0f, opacity: 1f);
@@ -87,6 +93,10 @@ public static class EffectsBuilder
         set.soulOrb = SavePrefab(Soul(orb, dot), "SoulOrb").GetComponent<SoulOrb>();
         set.respawn = SavePrefab(Respawn(puff, spark, ring), "Respawn");
         set.solidify = SavePrefab(Solidify(puff, ring, dot), "CloneSolidify");
+        set.speedLines = SavePrefab(SpeedLines(dot), "SpeedLines");
+        set.cloneImpact = SavePrefab(CloneImpact(puff, ring, spark, dot), "CloneImpact");
+        set.absorb = SavePrefab(Absorb(ring, spark), "Absorb");
+        set.recallGhost = SavePrefab(Ghost(set.cloneMaterial, set.afterimageMaterial, dot, set.absorb), "RecallGhost").GetComponent<RecallGhost>();
         return set;
     }
 
@@ -168,7 +178,7 @@ public static class EffectsBuilder
         return ps.gameObject;
     }
 
-    // replicarse: membrana que se estira y revienta + humo + anillo
+    // replicarse: membrana que se estira y revienta + humo + anillos + chorro de gotas hacia delante
     static GameObject Split(Material puff, Material ring, Material dot)
     {
         var root = new GameObject("CloneSplit");
@@ -201,7 +211,25 @@ public static class EffectsBuilder
         Sheet(smoke, 4, 0.25f, 0.25f);
         FadeOut(smoke, 0.5f);
 
-        ParticleSystem wave = RingWave(root.transform, ring, new Color(1f, 0.45f, 0.4f), 2f, 0.25f, 5);
+        RingWave(root.transform, ring, new Color(1f, 0.45f, 0.4f), 2f, 0.25f, 5);
+        RingWave(root.transform, ring, White, 2.8f, 0.18f, 6);
+
+        // chorro de gotas hacia donde sale la replica (SplitEffect orienta el cono)
+        ParticleSystem spray = Particles(root.transform, "Spray", dot, 6);
+        main = spray.main;
+        main.playOnAwake = false;
+        main.startLifetime = new ParticleSystem.MinMaxCurve(0.25f, 0.5f);
+        main.startSize = new ParticleSystem.MinMaxCurve(2f / PPU, 5f / PPU);
+        main.startSpeed = new ParticleSystem.MinMaxCurve(6f, 13f);
+        main.startColor = RandomColor(Red, Skin, White);
+        main.gravityModifier = 0.9f;
+        Burst(spray, 16);
+        var sprayShape = spray.shape;
+        sprayShape.enabled = true;
+        sprayShape.shapeType = ParticleSystemShapeType.Cone;
+        sprayShape.angle = 22f;
+        sprayShape.radius = 0.15f;
+        Drag(spray, 4f);
 
         ParticleSystem droplets = Particles(root.transform, "Droplets", dot, 5);
         main = droplets.main;
@@ -220,7 +248,134 @@ public static class EffectsBuilder
         list.arraySize = strands.Length;
         for (int i = 0; i < strands.Length; i++) list.GetArrayElementAtIndex(i).objectReferenceValue = strands[i];
         so.FindProperty("droplets").objectReferenceValue = droplets;
+        so.FindProperty("spray").objectReferenceValue = spray;
         so.ApplyModifiedPropertiesWithoutUndo();
+        AddAutoDestroy(root, 1.2f);
+        return root;
+    }
+
+    // lineas de velocidad mientras el clon sale disparado (Clone las enciende y apaga)
+    static GameObject SpeedLines(Material dot)
+    {
+        ParticleSystem ps = Particles(null, "SpeedLines", dot, 1);
+        var main = ps.main;
+        main.loop = true;
+        main.startLifetime = new ParticleSystem.MinMaxCurve(0.08f, 0.16f);
+        main.startSize = new ParticleSystem.MinMaxCurve(2f / PPU, 3f / PPU);
+        main.startColor = RandomColor(White, Skin, Color.white);
+
+        var emission = ps.emission;
+        emission.rateOverDistance = 14f;
+        emission.enabled = false;
+        var shape = ps.shape;
+        shape.enabled = true;
+        shape.shapeType = ParticleSystemShapeType.Box;
+        shape.scale = new Vector3(0.1f, 0.9f, 0f);
+
+        // se mueven un poco hacia atras para que las rayas se alineen en horizontal
+        var velocity = ps.velocityOverLifetime;
+        velocity.enabled = true;
+        velocity.space = ParticleSystemSimulationSpace.World;
+        velocity.x = new ParticleSystem.MinMaxCurve(-3f);
+        velocity.y = new ParticleSystem.MinMaxCurve(0f);
+        velocity.z = new ParticleSystem.MinMaxCurve(0f);
+
+        var renderer = ps.GetComponent<ParticleSystemRenderer>();
+        renderer.renderMode = ParticleSystemRenderMode.Stretch;
+        renderer.lengthScale = 12f;
+        renderer.velocityScale = 0f;
+        FadeOut(ps, 0.3f);
+        return ps.gameObject;
+    }
+
+    // al recuperar una replica: copia holografica que vuelve volando con estela (la mueve RecallGhost)
+    static GameObject Ghost(Material clone, Material afterimageMaterial, Material dot, GameObject absorb)
+    {
+        var root = new GameObject("RecallGhost");
+        var sr = root.AddComponent<SpriteRenderer>();
+        sr.sharedMaterial = clone;
+        sr.sortingOrder = 8;
+
+        var trail = root.AddComponent<TrailRenderer>();
+        trail.sharedMaterial = dot;
+        trail.time = 0.18f;
+        trail.minVertexDistance = 0.05f;
+        trail.widthCurve = new AnimationCurve(new Keyframe(0f, 12f / PPU), new Keyframe(1f, 0f));
+        trail.colorGradient = Gradient2(new Color(1f, 0.85f, 0.75f, 0.9f), new Color(0.95f, 0.3f, 0.3f, 0.6f), new Color(0.6f, 0.1f, 0.1f, 0f));
+        trail.sortingOrder = 7;
+
+        var afterimage = root.AddComponent<Afterimage>();
+        var so = new SerializedObject(afterimage);
+        so.FindProperty("source").objectReferenceValue = sr;
+        so.FindProperty("material").objectReferenceValue = afterimageMaterial;
+        so.FindProperty("interval").floatValue = 0.03f;
+        so.FindProperty("fadeTime").floatValue = 0.1f;
+        so.ApplyModifiedPropertiesWithoutUndo();
+
+        SetRef(root.AddComponent<RecallGhost>(), "absorbEffect", absorb);
+        return root;
+    }
+
+    // la replica vuelve a ti: anillo que se cierra sobre el jugador y unas chispitas
+    static GameObject Absorb(Material ring, Material spark)
+    {
+        var root = new GameObject("Absorb");
+        ParticleSystem wave = RingWave(root.transform, ring, Skin, 2.6f, 0.22f, 7);
+        // al reves que una onda normal: el anillo se cierra hacia dentro
+        var sheet = wave.textureSheetAnimation;
+        sheet.frameOverTime = new ParticleSystem.MinMaxCurve(1f, AnimationCurve.Linear(0f, 0.99f, 1f, 0f));
+
+        ParticleSystem sparks = Particles(root.transform, "Sparks", spark, 7);
+        var main = sparks.main;
+        main.startLifetime = new ParticleSystem.MinMaxCurve(0.2f, 0.35f);
+        main.startSize = 9f / PPU;
+        main.startColor = RandomColor(Color.white, Skin, White);
+        Burst(sparks, 5);
+        Circle(sparks, 0.45f);
+        VelocityDecay(sparks, new Vector2(-0.6f, 0.4f), new Vector2(0.6f, 1.4f));
+        Sheet(sparks, 4, 0f, 0f);
+
+        AddAutoDestroy(root, 0.8f);
+        return root;
+    }
+
+    // la replica se estampa contra algo nada mas salir: golpe con anillos, polvo, trozos y chispas
+    static GameObject CloneImpact(Material puff, Material ring, Material spark, Material dot)
+    {
+        var root = new GameObject("CloneImpact");
+        RingWave(root.transform, ring, White, 3f, 0.22f, 6);
+        RingWave(root.transform, ring, Red, 2f, 0.3f, 5);
+
+        ParticleSystem puffs = Particles(root.transform, "Puffs", puff, 5);
+        var main = puffs.main;
+        main.startLifetime = new ParticleSystem.MinMaxCurve(0.3f, 0.55f);
+        main.startColor = RandomColor(Skin, White, Dust);
+        Burst(puffs, 12);
+        Circle(puffs, 0.35f);
+        VelocityDecay(puffs, new Vector2(-2.5f, -0.6f), new Vector2(2.5f, 2f));
+        Sheet(puffs, 4, 0f, 0.25f);
+        FadeOut(puffs, 0.5f);
+
+        ParticleSystem bits = Particles(root.transform, "Bits", dot, 6);
+        main = bits.main;
+        main.startLifetime = new ParticleSystem.MinMaxCurve(0.4f, 0.8f);
+        main.startSize = new ParticleSystem.MinMaxCurve(2f / PPU, 5f / PPU);
+        main.startSpeed = new ParticleSystem.MinMaxCurve(3f, 8f);
+        main.startColor = RandomColor(Red, Skin, White);
+        main.gravityModifier = 1f;
+        Burst(bits, 18);
+        Circle(bits, 0.15f);
+        Drag(bits, 3f);
+
+        ParticleSystem sparks = Particles(root.transform, "Sparks", spark, 7);
+        main = sparks.main;
+        main.startLifetime = new ParticleSystem.MinMaxCurve(0.15f, 0.3f);
+        main.startSize = 9f / PPU;
+        main.startColor = RandomColor(Color.white, White, Skin);
+        Burst(sparks, 5);
+        Circle(sparks, 0.4f);
+        Sheet(sparks, 4, 0f, 0f);
+
         AddAutoDestroy(root, 1.2f);
         return root;
     }
@@ -269,9 +424,9 @@ public static class EffectsBuilder
         var so = new SerializedObject(freeze);
         so.FindProperty("bodyMaterial").objectReferenceValue = frozen;
         so.FindProperty("decal").objectReferenceValue = frostSr;
-        so.FindProperty("shakePixels").floatValue = 8f;
+        so.FindProperty("shakePixels").floatValue = 5f;
         so.FindProperty("shakeTime").floatValue = 0.35f;
-        so.FindProperty("hitStop").floatValue = 0.08f;
+        so.FindProperty("hitStop").floatValue = 0.04f;
         so.ApplyModifiedPropertiesWithoutUndo();
         return root;
     }

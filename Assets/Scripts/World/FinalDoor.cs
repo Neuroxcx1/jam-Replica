@@ -22,7 +22,7 @@ public class FinalDoor : MonoBehaviour
 
         enabled = true;
         player.SetAlive(false);
-        // el jugador ya no hace nada (tampoco reiniciar la zona); la T la mira esta puerta
+        // el jugador ya no hace nada; la K la mira esta puerta
         player.enabled = false;
     }
 
@@ -43,6 +43,6 @@ public class FinalDoor : MonoBehaviour
         GUI.Label(new Rect(0, 0, Screen.width, Screen.height), message, style);
 
         style.fontSize = Screen.height / 40;
-        GUI.Label(new Rect(0, Screen.height * 0.6f, Screen.width, Screen.height * 0.1f), "T para empezar de nuevo", style);
+        GUI.Label(new Rect(0, Screen.height * 0.6f, Screen.width, Screen.height * 0.1f), "K para empezar de nuevo", style);
     }
 }

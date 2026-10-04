@@ -1,11 +1,12 @@
 using UnityEngine;
 
 // Al replicarte: unas hebras de carne unen al jugador con la replica, se estiran y se rompen
-// (primero las de fuera, la del medio la ultima).
+// (primero las de fuera, la del medio la ultima). Como la replica sale disparada, ademas salpica hacia delante.
 public class SplitEffect : MonoBehaviour
 {
     [SerializeField] LineRenderer[] strands;
     [SerializeField] ParticleSystem droplets;
+    [SerializeField] ParticleSystem spray;
     [SerializeField] float snapDistance = 1.4f;
     [SerializeField] float maxTime = 0.4f;
     [SerializeField] float strandWidth = 0.3f;
@@ -16,12 +17,20 @@ public class SplitEffect : MonoBehaviour
     float timer;
     bool[] snapped;
 
-    public void Init(Transform from, Transform to)
+    public void Init(Transform from, Transform to, int direction)
     {
         this.from = from;
         this.to = to;
         snapped = new bool[strands.Length];
         UpdateStrands();
+
+        if (spray != null)
+        {
+            // el cono del chorro mira hacia donde sale la replica
+            var shape = spray.shape;
+            shape.rotation = new Vector3(0f, direction * 90f, 0f);
+            spray.Play();
+        }
     }
 
     void Update()

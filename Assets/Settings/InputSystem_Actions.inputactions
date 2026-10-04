@@ -96,9 +96,18 @@
                     "initialStateCheck": false
                 },
                 {
-                    "name": "Die",
+                    "name": "Freeze",
                     "type": "Button",
                     "id": "2a8f5c06-e94b-4d71-b3a2-6c9e1d4f8b30",
+                    "expectedControlType": "Button",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                },
+                {
+                    "name": "Recall",
+                    "type": "Button",
+                    "id": "84b8ba35-8b83-411e-a392-e19360459d0e",
                     "expectedControlType": "Button",
                     "processors": "",
                     "interactions": "",
@@ -503,7 +512,7 @@
                 {
                     "name": "",
                     "id": "b3c1e0a2-6f4d-4a8e-9c71-2d5f8e0a4b13",
-                    "path": "<Keyboard>/e",
+                    "path": "<Keyboard>/shift",
                     "interactions": "",
                     "processors": "",
                     "groups": "Keyboard&Mouse",
@@ -525,11 +534,11 @@
                 {
                     "name": "",
                     "id": "9d2f6b48-3a1c-4e07-b5d9-0f8e2a6c1b75",
-                    "path": "<Keyboard>/r",
+                    "path": "<Keyboard>/ctrl",
                     "interactions": "",
                     "processors": "",
                     "groups": "Keyboard&Mouse",
-                    "action": "Die",
+                    "action": "Freeze",
                     "isComposite": false,
                     "isPartOfComposite": false
                 },
@@ -540,14 +549,14 @@
                     "interactions": "",
                     "processors": "",
                     "groups": "Gamepad",
-                    "action": "Die",
+                    "action": "Freeze",
                     "isComposite": false,
                     "isPartOfComposite": false
                 },
                 {
                     "name": "",
                     "id": "5b9e3d17-a2c4-4f86-9d01-c7e8f2a4b6d3",
-                    "path": "<Keyboard>/t",
+                    "path": "<Keyboard>/k",
                     "interactions": "",
                     "processors": "",
                     "groups": "Keyboard&Mouse",
@@ -563,6 +572,50 @@
                     "processors": "",
                     "groups": "Gamepad",
                     "action": "Restart",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "c2e6e99a-6db3-4017-a5e1-a7641c85574f",
+                    "path": "<Keyboard>/w",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "Keyboard&Mouse",
+                    "action": "Jump",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "2c531760-1337-419e-818b-9fca31b09c7b",
+                    "path": "<Keyboard>/upArrow",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "Keyboard&Mouse",
+                    "action": "Jump",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "3a0e8988-3a61-4103-b96f-96a68b8848a0",
+                    "path": "<Keyboard>/q",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "Keyboard&Mouse",
+                    "action": "Recall",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "221c5ce4-4b2c-4650-95cb-b51427262109",
+                    "path": "<Gamepad>/buttonNorth",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "Gamepad",
+                    "action": "Recall",
                     "isComposite": false,
                     "isPartOfComposite": false
                 }

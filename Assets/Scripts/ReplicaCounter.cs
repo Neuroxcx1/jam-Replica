@@ -17,7 +17,7 @@ public class ReplicaCounter : MonoBehaviour
 
     void Awake()
     {
-        // sobrevive al reinicio con T
+        // sobrevive al reinicio con K
         DontDestroyOnLoad(gameObject);
 
         var canvas = gameObject.AddComponent<Canvas>();

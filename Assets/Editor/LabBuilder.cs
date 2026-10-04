@@ -90,7 +90,7 @@ public static class LabBuilder
     // ---------- zonas ----------
     // Cada zona es una sala grande con una salida y varios sistemas que reaccionan a los cuerpos,
     // para que se pueda resolver de varias formas. Las salidas tienen otra ruta o son altas para que
-    // un cuerpo mal puesto no las tape (y si pasa, T reinicia solo la zona).
+    // un cuerpo mal puesto no las tape (y si pasa, con la Q lo recuperas).
 
     // Zona 1 - Pabellon de especimenes. Sales de tu corral; la salida esta en la plataforma de observacion
     // (5 de alto, el techo de la sala de control, que esta cerrada). El suelo de los corrales esta electrificado.
@@ -112,6 +112,8 @@ public static class LabBuilder
         Prop("ordenador", 40.5f, 6, false);
         Terminal(36.5f, 11);
         Prop("escritorio", 39.5f, 11, false);
+        // los controles, pegados en la pared del corral donde empiezas
+        AddSprite(NewObject(decor, "Cartel de controles", new Vector3(5.5f, 9.5f), 0), art.controlsSign, -9);
 
         Lamp(5f, 17, false);
         Lamp(11f, 17, true);

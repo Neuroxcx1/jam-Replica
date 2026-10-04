@@ -2,8 +2,11 @@ using UnityEngine;
 
 public class JumpState : PlayerState
 {
-    [SerializeField] float jumpForce = 12f;
+    [SerializeField] float jumpForce = 13f;
     [SerializeField] float jumpCutMultiplier = 0.5f;
+    // cerca del punto mas alto (con el salto pulsado) la gravedad baja: da un instante para apuntar el aterrizaje
+    [SerializeField] float apexSpeed = 2f;
+    [SerializeField] float apexGravity = 0.5f;
     [SerializeField] GameObject jumpDust;
     [SerializeField] float shakePixels = 1f;
 
@@ -16,6 +19,11 @@ public class JumpState : PlayerState
 
         player.ClearJumpTimers();
         player.Rb.linearVelocity = new Vector2(player.Rb.linearVelocity.x, jumpForce);
+    }
+
+    public override void Exit()
+    {
+        player.Rb.gravityScale = player.BaseGravity;
     }
 
     public override void UpdateState(float delta)
@@ -32,5 +40,8 @@ public class JumpState : PlayerState
     public override void PhysicsUpdate(float delta)
     {
         player.Move(player.MoveInput);
+
+        bool apex = player.JumpHeld && player.Rb.linearVelocity.y < apexSpeed;
+        player.Rb.gravityScale = player.BaseGravity * (apex ? apexGravity : 1f);
     }
 }

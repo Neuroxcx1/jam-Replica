@@ -52,6 +52,8 @@ public static class LabAssets
         public Sprite tankWall;
         public Sprite tankRim;
         public Sprite tankBack;
+
+        public Sprite controlsSign;
     }
 
     // colores sacados del tileset
@@ -85,6 +87,7 @@ public static class LabAssets
         SliceProps(set);
         CreateLampSprites(set);
         CreateMachineSprites(set);
+        CreateControlsSign(set);
 
         AssetDatabase.SaveAssets();
         return set;
@@ -477,6 +480,69 @@ public static class LabAssets
         Paint(back, 0, 16, 32, 1, Dark);
         for (int x = 4; x < 32; x += 12) back.SetPixel(x, 8, Mid2);
         set.tankBack = SaveSprite(back, "Tanque_Fondo", new Vector2(0.5f, 0.5f));
+    }
+
+    // cartel de papel con los controles, pegado con cinta en la pared del corral donde empiezas
+    static void CreateControlsSign(Set set)
+    {
+        (string keys, string action)[] rows =
+        {
+            ("A D", "MOVERSE"),
+            ("ESPACIO W", "SALTAR"),
+            ("SHIFT", "LANZAR CLON"),
+            ("CTRL", "CLON CONGELADO"),
+            ("Q", "RECUPERAR CLON"),
+            ("K", "REINICIAR"),
+        };
+        Color paper = Hex("D6D2C4");
+
+        // el papel; alrededor queda sitio para su sombra en la pared y para la cinta
+        const int left = 4, bottom = 6, width = 158, height = 104;
+        var sign = Canvas(width + 8, height + 10);
+        Paint(sign, left + 2, bottom - 2, width, height, new Color(0f, 0f, 0f, 0.35f));
+        Paint(sign, left, bottom, width, height, Hex("A9A595"));
+        Paint(sign, left + 1, bottom + 1, width - 2, height - 2, paper);
+        Paint(sign, left + 1, bottom + height - 14, width - 2, 13, Hex("9E2B30"));
+        PixelText.Draw(sign, "CONTROLES", left + (width - PixelText.Width("CONTROLES")) / 2, bottom + height - 11, paper);
+
+        int y = bottom + height - 28;
+        foreach (var (keys, action) in rows)
+        {
+            int x = left + 6;
+            foreach (string key in keys.Split(' ')) x = Keycap(sign, key, x, y) + 2;
+            PixelText.Draw(sign, action, left + 68, y + 2, Dark);
+            y -= 14;
+        }
+
+        Tape(sign, left + 3, bottom + height - 4, 1);
+        Tape(sign, left + width - 4, bottom + height - 4, -1);
+        set.controlsSign = SaveSprite(sign, "Cartel_Controles", new Vector2(0.5f, 0.5f));
+    }
+
+    // tecla de teclado con las esquinas redondeadas y un pixel de sombra debajo; devuelve donde acaba
+    static int Keycap(Texture2D texture, string label, int x, int y)
+    {
+        int width = PixelText.Width(label) + 4;
+        Paint(texture, x + 1, y - 1, width - 2, 1, Hex("8C8879"));
+        Paint(texture, x + 1, y, width - 2, 11, Dark);
+        Paint(texture, x, y + 1, width, 9, Dark);
+        Paint(texture, x + 1, y + 1, width - 2, 9, Hex("ECEAE2"));
+        PixelText.Draw(texture, label, x + 2, y + 2, Dark);
+        return x + width;
+    }
+
+    // tira de cinta cruzando en diagonal una esquina de arriba (side = 1 la izquierda, -1 la derecha)
+    static void Tape(Texture2D texture, int x, int y, int side)
+    {
+        Color tape = Hex("E2D9AE"), edge = Hex("9C9270");
+        for (int u = -8; u <= 8; u++)
+            for (int v = -8; v <= 8; v++)
+            {
+                int across = Mathf.Abs(u + v), along = Mathf.Abs(u - v);
+                int px = x + u * side, py = y + v;
+                if (across > 4 || along > 11 || px < 0 || py < 0 || px >= texture.width || py >= texture.height) continue;
+                texture.SetPixel(px, py, across == 4 || along >= 10 ? edge : tape);
+            }
     }
 
     // franja de peligro amarilla y negra en diagonal
