@@ -287,7 +287,7 @@ ParticleSystem:
     startSize:
       serializedVersion: 2
       minMaxState: 0
-      scalar: 0.3125
+      scalar: 0.28125
       minScalar: 1
       maxCurve:
         serializedVersion: 2
@@ -9874,7 +9874,7 @@ MonoBehaviour:
   decal: {fileID: 828299377872720044}
   decalGrowTime: 0.3
   flashTime: 0.15
-  shakePixels: 4
+  shakePixels: 8
   shakeTime: 0.35
   hitStop: 0.08
 --- !u!1 &8263419786690911096

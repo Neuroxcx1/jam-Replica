@@ -38,6 +38,33 @@ public static class PrototypeBuilder
             !EditorUtility.DisplayDialog("Replica", "Esto borra y regenera " + ScenePath + ". ¿Seguir?", "Sí", "Cancelar"))
             return;
 
+        var scene = NewSceneFromTemplate(ScenePath);
+        Player player = CreatePlayerAndPrefabs(new Vector3(0f, 0.5f));
+        BuildLevel();
+        SetupCamera(player.transform);
+
+        EditorSceneManager.SaveScene(scene);
+        AddSceneToBuildSettings(ScenePath, false);
+        Selection.activeGameObject = player.gameObject;
+        Debug.Log("Escena prototipo creada en " + ScenePath);
+    }
+
+    // ---------- lo comparten la escena de prueba y el laboratorio (LabBuilder) ----------
+
+    public static int GroundLayer => groundLayer;
+    public static Sprite Square => square;
+
+    public static UnityEngine.SceneManagement.Scene NewSceneFromTemplate(string path)
+    {
+        EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
+        AssetDatabase.DeleteAsset(path);
+        AssetDatabase.CopyAsset(TemplateScenePath, path);
+        return EditorSceneManager.OpenScene(path);
+    }
+
+    // sprites base, efectos, prefabs de replica y cuerpo, y el jugador
+    public static Player CreatePlayerAndPrefabs(Vector3 position)
+    {
         CreateFolder("Assets/Sprites");
         CreateFolder("Assets/Prefabs");
         CreateFolder("Assets/Physics");
@@ -47,23 +74,10 @@ public static class PrototypeBuilder
         noFriction = CreateNoFrictionMaterial();
         groundLayer = AddLayer("Ground");
 
-        EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
-        AssetDatabase.DeleteAsset(ScenePath);
-        AssetDatabase.CopyAsset(TemplateScenePath, ScenePath);
-        var scene = EditorSceneManager.OpenScene(ScenePath);
-
         EffectsBuilder.EffectSet fx = EffectsBuilder.Build();
         GameObject bodyPrefab = CreateBodyPrefab(fx);
         Clone clonePrefab = CreateClonePrefab(bodyPrefab, fx);
-
-        BuildLevel();
-        Player player = CreatePlayer(new Vector3(0f, 0.5f), clonePrefab, bodyPrefab, fx);
-        SetupCamera(player.transform);
-
-        EditorSceneManager.SaveScene(scene);
-        AddSceneToBuildSettings();
-        Selection.activeGameObject = player.gameObject;
-        Debug.Log("Escena prototipo creada en " + ScenePath);
+        return CreatePlayer(position, clonePrefab, bodyPrefab, fx);
     }
 
     static void BuildLevel()
@@ -159,7 +173,10 @@ public static class PrototypeBuilder
     {
         var go = new GameObject("Body");
         go.layer = groundLayer;
-        AddSprite(go, CharacterSize, BodyColor, 1).sharedMaterial = fx.bodyMaterial;
+        // el sprite va en un hijo para pegarlo a la rejilla de pixeles sin tocar la fisica
+        GameObject visual = Child(go.transform, "Visual", Vector3.zero);
+        AddSprite(visual, CharacterSize, BodyColor, 1).sharedMaterial = fx.bodyMaterial;
+        visual.AddComponent<PixelSnap>();
         go.AddComponent<BoxCollider2D>().size = CharacterSize;
 
         // solo cae en vertical, no se puede empujar
@@ -168,6 +185,7 @@ public static class PrototypeBuilder
         rb.mass = 5f;
         rb.interpolation = RigidbodyInterpolation2D.Interpolate;
         rb.constraints = RigidbodyConstraints2D.FreezePositionX | RigidbodyConstraints2D.FreezeRotation;
+        go.AddComponent<Body>();
 
         return SavePrefab(go, "Assets/Prefabs/Body.prefab");
     }
@@ -190,6 +208,7 @@ public static class PrototypeBuilder
     {
         GameObject visual = Child(parent, "Visual", Vector3.zero);
         AddSprite(visual, CharacterSize, color, order);
+        visual.AddComponent<PixelSnap>();
         AddSprite(Child(visual.transform, "Eye", new Vector3(0.2f, 0.25f)), new Vector2(0.15f, 0.15f), EyeColor, order + 1);
         return visual.transform;
     }
@@ -248,7 +267,7 @@ public static class PrototypeBuilder
         go.AddComponent<Goal>();
     }
 
-    static void SetupCamera(Transform target)
+    public static void SetupCamera(Transform target)
     {
         Camera cam = Camera.main;
         if (cam == null)
@@ -264,11 +283,11 @@ public static class PrototypeBuilder
 
         SetRef(cam.gameObject.AddComponent<CameraFollow>(), "target", target);
 
-        // pixel art 16x16: se renderiza a 320x180 y se escala, asi todo (efectos incluidos) sale en pixeles
+        // pixel art de 32 px por unidad: se renderiza a 640x360 y se escala, asi todo (efectos incluidos) sale en pixeles
         var pixelPerfect = cam.gameObject.AddComponent<PixelPerfectCamera>();
-        pixelPerfect.assetsPPU = 16;
-        pixelPerfect.refResolutionX = 320;
-        pixelPerfect.refResolutionY = 180;
+        pixelPerfect.assetsPPU = 32;
+        pixelPerfect.refResolutionX = 640;
+        pixelPerfect.refResolutionY = 360;
         pixelPerfect.gridSnapping = PixelPerfectCamera.GridSnapping.UpscaleRenderTexture;
         pixelPerfect.cropFrame = PixelPerfectCamera.CropFrame.StretchFill;
     }
@@ -383,11 +402,13 @@ public static class PrototypeBuilder
             AssetDatabase.CreateFolder("Assets", Path.GetFileName(path));
     }
 
-    static void AddSceneToBuildSettings()
+    // first = true la pone la primera (la que se abre al jugar la build)
+    public static void AddSceneToBuildSettings(string path, bool first)
     {
         var scenes = new List<EditorBuildSettingsScene>(EditorBuildSettings.scenes);
-        scenes.RemoveAll(s => s.path == ScenePath);
-        scenes.Insert(0, new EditorBuildSettingsScene(ScenePath, true));
+        scenes.RemoveAll(s => s.path == path);
+        if (first) scenes.Insert(0, new EditorBuildSettingsScene(path, true));
+        else scenes.Add(new EditorBuildSettingsScene(path, true));
         EditorBuildSettings.scenes = scenes.ToArray();
     }
 }
