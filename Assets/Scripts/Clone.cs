@@ -13,6 +13,7 @@ public class Clone : MonoBehaviour
     Collider2D owner;
     int direction = 1;
     float lifeTimer;
+    float carry;
     bool hitWall;
     bool dead;
 
@@ -45,12 +46,20 @@ public class Clone : MonoBehaviour
 
         // solo va hacia delante. Si cae, cae recto para que los cuerpos queden juntos
         bool falling = rb.linearVelocity.y < -0.1f;
-        rb.linearVelocity = new Vector2(falling ? 0 : direction * speed, rb.linearVelocity.y);
+        rb.linearVelocity = new Vector2((falling ? 0 : direction * speed) + carry, rb.linearVelocity.y);
+        carry = 0f;
     }
 
-    void OnCollisionEnter2D(Collision2D collision)
+    // la cinta transportadora la arrastra
+    public void Carry(float speed) => carry = speed;
+
+    // si choca de frente con algo (pared, caja, otro cuerpo) muere ahi mismo.
+    // Stay tambien cuenta: el suelo y las paredes del mapa son un solo collider y chocar con la pared no es un contacto nuevo
+    void OnCollisionEnter2D(Collision2D collision) => CheckWall(collision);
+    void OnCollisionStay2D(Collision2D collision) => CheckWall(collision);
+
+    void CheckWall(Collision2D collision)
     {
-        // si choca de frente con algo (pared, caja, otro cuerpo) muere ahi mismo
         for (int i = 0; i < collision.contactCount; i++)
         {
             if (collision.GetContact(i).normal.x * direction < -0.9f)

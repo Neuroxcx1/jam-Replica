@@ -21,7 +21,7 @@ Material:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_Name: Replica_Frozen
-  m_Shader: {fileID: -6465566751694194690, guid: 52430aca42b2c6f429bfb84c06b0ff82, type: 3}
+  m_Shader: {fileID: -6465566751694194690, guid: 5c891ab9ecd4ec145922e9b80e33fc0b, type: 3}
   m_Parent: {fileID: 0}
   m_ModifiedSerializedProperties: 0
   m_ValidKeywords: []
@@ -58,7 +58,7 @@ Material:
     - _Flash: 0
     - _FlickerAmount: 0
     - _Opacity: 1
-    - _PixelsPerUnit: 16
+    - _PixelsPerUnit: 32
     - _RampAmount: 1
     - _RampSteps: 4
     - _ScanAmount: 0

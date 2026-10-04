@@ -28,7 +28,10 @@ public class Player : MonoBehaviour
     [SerializeField] GameObject deathEffect;
     [SerializeField] BodyEffect freezeEffect;
     [SerializeField] BodyEffect corpseEffect;
-    [SerializeField] float replicateShake = 2f;
+    [SerializeField] float replicateShake = 4f;
+
+    [Header("Reinicio")]
+    [SerializeField] float holdToRestartAll = 1f;
 
     public Rigidbody2D Rb { get; private set; }
     public Vector3 Feet => groundCheck.position;
@@ -49,6 +52,9 @@ public class Player : MonoBehaviour
     Collider2D col;
     Vector3 checkpoint;
     int facing = 1;
+    float checkpointTime;
+    float restartHeld;
+    float carry;
     float coyoteTimer;
     float jumpBufferTimer;
     float replicateTimer;
@@ -71,10 +77,21 @@ public class Player : MonoBehaviour
 
     void Update()
     {
-        // T: reinicia el nivel entero, cuerpos incluidos
-        if (restartAction.WasPressedThisFrame())
+        // T: vuelve al principio de la zona y quita los cuerpos que has dejado en ella (por si alguno tapa el camino).
+        // Mantenida un segundo reinicia el nivel entero
+        if (restartAction.IsPressed())
         {
-            SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
+            restartHeld += Time.unscaledDeltaTime;
+            if (restartHeld >= holdToRestartAll)
+            {
+                SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
+                return;
+            }
+        }
+        else if (restartHeld > 0f)
+        {
+            restartHeld = 0f;
+            RestartZone();
             return;
         }
 
@@ -116,8 +133,12 @@ public class Player : MonoBehaviour
 
     public void Move(float direction)
     {
-        Rb.linearVelocity = new Vector2(direction * moveSpeed, Rb.linearVelocity.y);
+        Rb.linearVelocity = new Vector2(direction * moveSpeed + carry, Rb.linearVelocity.y);
+        carry = 0f;
     }
+
+    // la cinta transportadora te arrastra
+    public void Carry(float speed) => carry = speed;
 
     void Replicate()
     {
@@ -172,7 +193,21 @@ public class Player : MonoBehaviour
         // solo un checkpoint nuevo recarga las replicas, reaparecer en el mismo no
         if (position == checkpoint) return;
         checkpoint = position;
+        checkpointTime = Time.time;
         ReplicasLeft = maxReplicas;
+    }
+
+    void RestartZone()
+    {
+        // de atras hacia delante: al destruir un cuerpo se quita el solo de la lista
+        for (int i = Body.All.Count - 1; i >= 0; i--)
+            if (Body.All[i].CreatedAt >= checkpointTime) Destroy(Body.All[i].gameObject);
+        foreach (Clone clone in FindObjectsByType<Clone>())
+            Destroy(clone.gameObject);
+
+        ReplicasLeft = maxReplicas;
+        Respawn();
+        stateMachine.ChangeState("idle");
     }
 
     void OnDrawGizmosSelected()
