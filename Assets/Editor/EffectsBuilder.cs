@@ -7,7 +7,8 @@ using UnityEngine;
 public static class EffectsBuilder
 {
     const string Root = "Assets/Effects";
-    const int PPU = 16;
+    // misma resolucion que el juego: 32 pixeles por unidad (personaje de 32 px)
+    const int PPU = 32;
 
     public class EffectSet
     {
@@ -54,18 +55,20 @@ public static class EffectsBuilder
         Material ring = SaveMaterial("FX_Ring", particleShader, ringTex);
         Material dot = SaveMaterial("FX_Pixel", particleShader, pixel.texture);
 
-        // un solo Shader Graph para todos los "looks" de cuerpos y replicas: solo cambian los valores
+        // un solo shader para todos los "looks" de cuerpos y replicas: solo cambian los valores.
+        // Las replicas brillan solas (Unlit) y los cuerpos reciben la luz de la sala (Lit)
         Shader replica = AssetDatabase.LoadAssetAtPath<Shader>(Root + "/Shaders/ReplicaSprite.shadergraph");
+        Shader replicaLit = AssetDatabase.LoadAssetAtPath<Shader>(Root + "/Shaders/ReplicaSpriteLit.shadergraph");
         var set = new EffectSet
         {
             cloneMaterial = ReplicaMaterial("Replica_Clone", replica, DeepRed, Skin, White, Red,
                 scan: 0.3f, shine: 0f, flicker: 0.12f, opacity: 0.85f),
-            bodyMaterial = ReplicaMaterial("Replica_Body", replica, new Color(0.35f, 0.12f, 0.12f), new Color(0.78f, 0.55f, 0.48f),
+            bodyMaterial = ReplicaMaterial("Replica_Body", replicaLit, new Color(0.35f, 0.12f, 0.12f), new Color(0.78f, 0.55f, 0.48f),
                 new Color(0.95f, 0.85f, 0.8f), new Color(0.42f, 0.12f, 0.12f), scan: 0f, shine: 0f, flicker: 0f, opacity: 1f)
         };
-        Material frozen = ReplicaMaterial("Replica_Frozen", replica, new Color(0.18f, 0.38f, 0.7f), new Color(0.55f, 0.82f, 0.97f),
+        Material frozen = ReplicaMaterial("Replica_Frozen", replicaLit, new Color(0.18f, 0.38f, 0.7f), new Color(0.55f, 0.82f, 0.97f),
             new Color(0.92f, 0.99f, 1f), new Color(0.97f, 1f, 1f), scan: 0f, shine: 0.8f, flicker: 0f, opacity: 1f);
-        Material dead = ReplicaMaterial("Replica_Dead", replica, new Color(0.25f, 0.18f, 0.2f), new Color(0.62f, 0.52f, 0.5f),
+        Material dead = ReplicaMaterial("Replica_Dead", replicaLit, new Color(0.25f, 0.18f, 0.2f), new Color(0.62f, 0.52f, 0.5f),
             new Color(0.86f, 0.79f, 0.76f), new Color(0.35f, 0.1f, 0.12f), scan: 0f, shine: 0f, flicker: 0f, opacity: 1f);
 
         Material frostMat = SaveMaterial("FrostDecal", AssetDatabase.LoadAssetAtPath<Shader>(Root + "/Shaders/FrostDecal.shadergraph"), frost.texture);
@@ -204,7 +207,7 @@ public static class EffectsBuilder
         main = droplets.main;
         main.playOnAwake = false;
         main.startLifetime = new ParticleSystem.MinMaxCurve(0.4f, 0.7f);
-        main.startSize = new ParticleSystem.MinMaxCurve(1f / PPU, 2f / PPU);
+        main.startSize = new ParticleSystem.MinMaxCurve(2f / PPU, 4f / PPU);
         main.startSpeed = new ParticleSystem.MinMaxCurve(1.5f, 3.5f);
         main.startColor = RandomColor(Red, Skin, White);
         main.gravityModifier = 0.7f;
@@ -237,7 +240,7 @@ public static class EffectsBuilder
         ParticleSystem shards = Particles(root.transform, "Shards", dot, 6);
         var main = shards.main;
         main.startLifetime = new ParticleSystem.MinMaxCurve(0.35f, 0.6f);
-        main.startSize = new ParticleSystem.MinMaxCurve(1f / PPU, 2f / PPU);
+        main.startSize = new ParticleSystem.MinMaxCurve(2f / PPU, 4f / PPU);
         main.startSpeed = new ParticleSystem.MinMaxCurve(2f, 4.5f);
         main.startColor = RandomColor(Color.white, Ice, new Color(0.45f, 0.75f, 1f));
         main.gravityModifier = 0.5f;
@@ -249,7 +252,7 @@ public static class EffectsBuilder
         main = glints.main;
         main.duration = 0.6f;
         main.startLifetime = new ParticleSystem.MinMaxCurve(0.3f, 0.45f);
-        main.startSize = 5f / PPU;
+        main.startSize = 9f / PPU;
         main.startColor = RandomColor(Color.white, Ice, Color.white);
         var emission = glints.emission;
         emission.rateOverTime = 12f;
@@ -266,7 +269,7 @@ public static class EffectsBuilder
         var so = new SerializedObject(freeze);
         so.FindProperty("bodyMaterial").objectReferenceValue = frozen;
         so.FindProperty("decal").objectReferenceValue = frostSr;
-        so.FindProperty("shakePixels").floatValue = 4f;
+        so.FindProperty("shakePixels").floatValue = 8f;
         so.FindProperty("shakeTime").floatValue = 0.35f;
         so.FindProperty("hitStop").floatValue = 0.08f;
         so.ApplyModifiedPropertiesWithoutUndo();
@@ -306,7 +309,7 @@ public static class EffectsBuilder
         ParticleSystem sparkles = Particles(root.transform, "Sparkles", spark, 6);
         var main = sparkles.main;
         main.startLifetime = new ParticleSystem.MinMaxCurve(0.5f, 0.8f);
-        main.startSize = 5f / PPU;
+        main.startSize = 9f / PPU;
         main.startColor = RandomColor(White, Skin, Color.white);
         main.gravityModifier = -0.05f;
         Burst(sparkles, 8);
@@ -341,7 +344,7 @@ public static class EffectsBuilder
         trail.sharedMaterial = dot;
         trail.time = 0.25f;
         trail.minVertexDistance = 0.05f;
-        trail.widthCurve = new AnimationCurve(new Keyframe(0f, 4f / PPU), new Keyframe(1f, 0f));
+        trail.widthCurve = new AnimationCurve(new Keyframe(0f, 8f / PPU), new Keyframe(1f, 0f));
         trail.colorGradient = Gradient2(new Color(1f, 0.95f, 0.9f, 0.9f), new Color(1f, 0.6f, 0.5f, 0.6f), new Color(0.9f, 0.2f, 0.2f, 0f));
         trail.sortingOrder = 6;
 
@@ -368,7 +371,7 @@ public static class EffectsBuilder
         ParticleSystem sparks = Particles(root.transform, "Sparks", spark, 6);
         main = sparks.main;
         main.startLifetime = new ParticleSystem.MinMaxCurve(0.4f, 0.6f);
-        main.startSize = 5f / PPU;
+        main.startSize = 9f / PPU;
         main.startColor = RandomColor(Color.white, Skin, Color.white);
         Burst(sparks, 4);
         Circle(sparks, 0.3f);
@@ -398,7 +401,7 @@ public static class EffectsBuilder
         ParticleSystem bits = Particles(root.transform, "Bits", dot, 5);
         main = bits.main;
         main.startLifetime = new ParticleSystem.MinMaxCurve(0.4f, 0.6f);
-        main.startSize = new ParticleSystem.MinMaxCurve(1f / PPU, 2f / PPU);
+        main.startSize = new ParticleSystem.MinMaxCurve(2f / PPU, 4f / PPU);
         main.startSpeed = new ParticleSystem.MinMaxCurve(1f, 2.5f);
         main.startColor = RandomColor(Skin, White, Color.white);
         main.gravityModifier = 0.6f;
@@ -436,7 +439,7 @@ public static class EffectsBuilder
         main.duration = 1f;
         main.startLifetime = 0.4f;
         main.startSpeed = 0f;
-        main.startSize = 8f / PPU;
+        main.startSize = 16f / PPU;
         main.maxParticles = 64;
         main.simulationSpace = ParticleSystemSimulationSpace.World;
 
@@ -560,32 +563,32 @@ public static class EffectsBuilder
         return tex;
     }
 
-    // 4 bolitas de humo de 8x8 que se van encogiendo
+    // 4 bolitas de humo de 16x16 que se van encogiendo
     static Texture2D PuffSheet()
     {
-        float[] radius = { 3.6f, 3f, 2.2f, 1.3f };
-        var tex = NewTexture(32, 8);
+        float[] radius = { 7.2f, 6f, 4.4f, 2.6f };
+        var tex = NewTexture(64, 16);
         var shade = new Color(0.8f, 0.72f, 0.68f, 1f);
         for (int f = 0; f < 4; f++)
-            for (int y = 0; y < 8; y++)
-                for (int x = 0; x < 8; x++)
+            for (int y = 0; y < 16; y++)
+                for (int x = 0; x < 16; x++)
                 {
-                    float dx = x + 0.5f - 4f, dy = y + 0.5f - 4f;
+                    float dx = x + 0.5f - 8f, dy = y + 0.5f - 8f;
                     if (dx * dx + dy * dy > radius[f] * radius[f]) continue;
                     bool lowerRight = dx - dy > radius[f] * 0.9f;
-                    tex.SetPixel(f * 8 + x, y, lowerRight ? shade : Color.white);
+                    tex.SetPixel(f * 16 + x, y, lowerRight ? shade : Color.white);
                 }
         return tex;
     }
 
-    // 4 chispas de 5x5: cruz grande, cruz pequena, cruz pequena, punto
+    // 4 chispas de 9x9: cruz grande, mediana, pequena y punto
     static Texture2D SparkSheet()
     {
-        int[] arm = { 2, 1, 1, 0 };
-        var tex = NewTexture(20, 5);
+        int[] arm = { 4, 3, 2, 0 };
+        var tex = NewTexture(36, 9);
         for (int f = 0; f < 4; f++)
         {
-            int cx = f * 5 + 2, cy = 2;
+            int cx = f * 9 + 4, cy = 4;
             tex.SetPixel(cx, cy, Color.white);
             for (int i = 1; i <= arm[f]; i++)
             {
@@ -598,20 +601,20 @@ public static class EffectsBuilder
         return tex;
     }
 
-    // 6 anillos de 32x32 que se expanden
+    // 6 anillos de 64x64 que se expanden
     static Texture2D RingSheet()
     {
-        var tex = NewTexture(192, 32);
+        var tex = NewTexture(384, 64);
         for (int f = 0; f < 6; f++)
         {
-            float r = 3f + f * 2.4f;
-            float thickness = f < 3 ? 1.6f : 1f;
-            for (int y = 0; y < 32; y++)
-                for (int x = 0; x < 32; x++)
+            float r = 6f + f * 4.8f;
+            float thickness = f < 3 ? 2.6f : 1.6f;
+            for (int y = 0; y < 64; y++)
+                for (int x = 0; x < 64; x++)
                 {
-                    float dx = x + 0.5f - 16f, dy = y + 0.5f - 16f;
+                    float dx = x + 0.5f - 32f, dy = y + 0.5f - 32f;
                     float d = Mathf.Sqrt(dx * dx + dy * dy);
-                    if (Mathf.Abs(d - r) <= thickness / 2f) tex.SetPixel(f * 32 + x, y, Color.white);
+                    if (Mathf.Abs(d - r) <= thickness / 2f) tex.SetPixel(f * 64 + x, y, Color.white);
                 }
         }
         return tex;
@@ -619,23 +622,23 @@ public static class EffectsBuilder
 
     static Texture2D OrbTexture()
     {
-        var tex = NewTexture(6, 6);
-        for (int y = 0; y < 6; y++)
-            for (int x = 0; x < 6; x++)
+        var tex = NewTexture(12, 12);
+        for (int y = 0; y < 12; y++)
+            for (int x = 0; x < 12; x++)
             {
-                float dx = x + 0.5f - 3f, dy = y + 0.5f - 3f;
+                float dx = x + 0.5f - 6f, dy = y + 0.5f - 6f;
                 float d = Mathf.Sqrt(dx * dx + dy * dy);
-                if (d <= 1.2f) tex.SetPixel(x, y, Color.white);
-                else if (d <= 3f) tex.SetPixel(x, y, new Color(1f, 1f, 1f, 0.55f));
+                if (d <= 2.4f) tex.SetPixel(x, y, Color.white);
+                else if (d <= 6f) tex.SetPixel(x, y, new Color(1f, 1f, 1f, 0.55f));
             }
         return tex;
     }
 
-    // Escarcha de 48x48 guardada como datos para el shader:
+    // Escarcha de 96x96 guardada como datos para el shader:
     // R = tono, G = momento en que aparece (0 centro, 1 puntas), B = destello, A = forma
     static Texture2D FrostTexture()
     {
-        const int size = 48;
+        const int size = 96;
         float c = size / 2f;
         var rng = new System.Random(7);
         var mask = new bool[size, size];
@@ -648,7 +651,7 @@ public static class EffectsBuilder
                 float dx = x + 0.5f - c, dy = y + 0.5f - c;
                 float d = Mathf.Sqrt(dx * dx + dy * dy);
                 float a = Mathf.Atan2(dy, dx);
-                float r = 8.5f + 2.2f * Mathf.Sin(3f * a + 1f) + 1.3f * Mathf.Sin(5f * a + 2f);
+                float r = 17f + 4.4f * Mathf.Sin(3f * a + 1f) + 2.6f * Mathf.Sin(5f * a + 2f);
                 if (d <= r)
                 {
                     mask[x, y] = true;
@@ -661,20 +664,20 @@ public static class EffectsBuilder
         for (int k = 0; k < arms; k++)
         {
             float angle = k * Mathf.PI * 2f / arms + ((float)rng.NextDouble() - 0.5f) * 0.5f;
-            float length = 13f + (float)rng.NextDouble() * 9f;
+            float length = 26f + (float)rng.NextDouble() * 18f;
             var dir = new Vector2(Mathf.Cos(angle), Mathf.Sin(angle));
             for (float s = 0f; s <= length; s += 0.5f)
             {
-                float width = Mathf.Lerp(1.4f, 0.4f, s / length);
+                float width = Mathf.Lerp(2.8f, 0.8f, s / length);
                 Stamp(mask, tone, new Vector2(c, c) + dir * s, width, 0.95f - 0.35f * (s / length));
             }
             float branchAt = length * (0.45f + (float)rng.NextDouble() * 0.2f);
             for (int side = -1; side <= 1; side += 2)
             {
                 var branchDir = new Vector2(Mathf.Cos(angle + side * 0.7f), Mathf.Sin(angle + side * 0.7f));
-                float branchLength = 3f + (float)rng.NextDouble() * 2f;
+                float branchLength = 6f + (float)rng.NextDouble() * 4f;
                 for (float s = 0f; s <= branchLength; s += 0.5f)
-                    Stamp(mask, tone, new Vector2(c, c) + dir * branchAt + branchDir * s, 0.4f, 0.75f);
+                    Stamp(mask, tone, new Vector2(c, c) + dir * branchAt + branchDir * s, 0.8f, 0.75f);
             }
         }
 

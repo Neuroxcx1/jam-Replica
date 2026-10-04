@@ -8,12 +8,12 @@ Lo que lo diferencia: **el escenario reacciona a la masa de tus cuerpos**.
 - [ ] **Peso**: rejillas, cristales y pasarelas que se rompen con N cuerpos encima.
       Ascensor de contrapeso. Se hace contando cuerpos en una zona (OverlapBox/trigger), sin física real.
 - [ ] **Presión**: sala sellada con manómetro en la pared. Al llenarla de clones revienta (cristal o puerta).
-- [ ] **Bloquear**: cuerpo congelado que atasca una prensa, corta un láser o deja abierta una compuerta.
-- [ ] **Señuelos**: torretas o drones que disparan a lo primero que ven → las réplicas como cebo.
+- [x] **Bloquear**: un cuerpo encima del emisor corta el láser; un cuerpo delante tapa la torreta.
+- [x] **Señuelos**: la torreta dispara a lo más cercano que ve → las réplicas como cebo.
 - [ ] **Reacción en cadena**: tanque de gas que explota al chocar un clon y rompe una pared.
 
 ### Niveles
-- [ ] Salas "realistas" (pozos, ventanas altas, escaleras rotas). Las plataformas las crea el jugador con sus cuerpos.
+- [x] Salas "realistas" (pozos, ventanas altas, escaleras rotas). Las plataformas las crea el jugador con sus cuerpos.
 - [ ] Estructura: salas de prueba al principio → mantenimiento, conductos y oficinas al escapar.
 - [ ] El objetivo de cada sala es **salir rompiendo algo**, no tocar una bandera.
 - [ ] Final: replicarte hasta reventar el laboratorio entero.
@@ -71,17 +71,17 @@ qué es fantasma (réplica, no choca), qué es sólido (cuerpo congelado) y qué
 - [ ] T (reinicio): transición pixelada (fade/wipe) y que los cuerpos se rompan antes de recargar.
 
 ### Ambiente
-- [ ] Bajar la Global Light 2D y poner Light2D en jugador, checkpoints y meta.
-- [ ] Volume con Bloom (para que brillen holograma e hielo), Vignette y color grading.
+- [x] Bajar la Global Light 2D y poner Light2D en jugador, lámparas, alarmas, láseres, puertas y desechos.
+- [x] Volume con Bloom, Vignette y color grading (`Assets/Settings/Laboratorio_Postproceso`).
 - [ ] Fondo con parallax.
 
-## 2. Pasar a pixel art 16x16
-- [ ] Sprites a 16 PPU (1 unidad = 16 px), filtro Point, sin compresión.
-- [ ] Personaje de 16x16 con animaciones por estado: Idle, Run, Jump, Fall, Dead.
+## 2. Pixel art a 32 px por unidad (tileset Sci-Fi Labs de 32x32, personaje de 32 px)
+- [x] Sprites a 32 PPU (1 unidad = 1 tile = 32 px), filtro Point, sin compresión.
+- [ ] Personaje de 32 px de alto con animaciones por estado: Idle, Run, Jump, Fall, Dead.
       Encaja con la máquina de estados: cada `Enter()` reproduce su animación (como `play()` en Godot).
-- [ ] Nivel con Tilemap + Rule Tiles (el paquete 2D Tilemap Extras ya está instalado).
-- [x] Pixel Perfect Camera (URP 2D) con resolución de referencia **320x180**: escala exacta x6 en 1080p
-      y x8 en 1440p.
+- [x] Nivel con Tilemap + Rule Tiles (Tile Palette "Laboratorio").
+- [x] Pixel Perfect Camera (URP 2D) con resolución de referencia **640x360**: escala exacta x2 en 720p,
+      x3 en 1080p, x4 en 1440p y x6 en 4K.
 - [x] Partículas cuadradas sin suavizado para que no rompan el estilo.
 - [ ] Ajustar colliders a medidas en píxeles.
 
@@ -108,8 +108,66 @@ Los efectos no dependen del cuadrado. Para cambiarlo:
 - **Body** (prefab): sprite de cuerpo/estatua con el material **Replica_Body**. Al congelarse o morir en pinchos el material cambia solo (Freeze / Corpse).
 - En los SpriteRenderer de réplica y cuerpo pon el color en **blanco**: el color lo da el material según las sombras/medios/luces de tu sprite (`ColorDark`, `ColorMid`, `ColorLight`).
 - Todos los looks salen del mismo Shader Graph **ReplicaSprite** (`Assets/Effects/Shaders`): borde, líneas de escaneo, brillo, parpadeo y destello se activan desde cada material.
-- Si tu arte no usa 16 píxeles por unidad, cambia `PixelsPerUnit` en los materiales Replica_* y en la Pixel Perfect Camera.
+- El sprite siempre en un hijo `Visual` con el componente **PixelSnap** (Player, Clone y Body ya lo tienen). Si pones el sprite en el objeto con el Rigidbody2D el personaje vuelve a temblar al moverse.
+- Si tu arte no usa 32 píxeles por unidad, cambia `PixelsPerUnit` en los materiales Replica_*, en la Pixel Perfect Camera, en `PixelSnap` y en `CameraFollow`.
 - Hebras al replicarse: ajusta `strandWidth` y `spread` en el prefab **CloneSplit** al tamaño del personaje.
+
+## El laboratorio (escena `Laboratorio`)
+Tres zonas seguidas. Cada zona es una sala grande con una salida y varios sistemas que reaccionan a los cuerpos,
+para que se pueda resolver de varias formas. Cada puerta de zona se cierra detrás de ti, es el checkpoint y recarga las 6 réplicas.
+**T** vuelve al principio de la zona y quita los cuerpos que dejaste en ella (si uno te tapa el camino);
+**mantener T** reinicia el nivel entero.
+
+| Zona | Qué es | Obstáculo | Formas de pasarlo |
+|---|---|---|---|
+| 1 Pabellón de especímenes | Corrales, laboratorio y sala de control (cerrada) con plataforma de observación encima | Suelo electrificado de los corrales (8 de ancho) | Pasar cuando se apaga · subirte a un cuerpo (no conduce) · puente congelado |
+| | | Plataforma de observación (+5) | Montacargas: en la cabina, 2 réplicas al contrapeso y sube · escalera de 2 cuerpos congelados |
+| 2 Control de seguridad | Pasarela de observación arriba, archivo debajo, sala de vigilancia con garita | Láser fijo | Un cuerpo encima del emisor lo tapa |
+| | | Láser intermitente | Pasar cuando se apaga · taparlo · romper el cristal y bajar antes de llegar a él |
+| | | Suelo de cristal (aguanta 1) | Tú + una réplica encima → se rompe y bajas al archivo |
+| | | Garita: puerta automática con torreta dentro | Réplica de señuelo · un cuerpo deja la puerta abierta y tapa el disparo · saltar la torreta · cuerpo congelado delante del cañón |
+| 3 Planta de residuos | Cinta → compactadora, tanque de residuos, pasarela rota y muelle de carga | Vapor sobre la cinta | Pasar entre chorros · un cuerpo congelado debajo de la boca corta el chorro |
+| | | Compactadora | Pasar cuando está arriba · subirte y que te suba a la pasarela · atascarla con un cuerpo congelado |
+| | | Pasarela rota (6 de hueco sobre el tanque) | Cuerpo congelado en medio · cuerpos flotando en el tanque y escalera de cuerpos |
+
+Todos los sistemas y varias rutas de cada zona están probados con el salto real (prueba automática, 31 comprobaciones).
+
+### Editar el mapa
+- **Window > 2D > Tile Palette** → paleta **Laboratorio**. Arriba a la izquierda están los dos Rule Tiles:
+  **Terreno** (pone solo los bordes de piedra y los rincones) y **Fondo** (paneles al azar). El resto es el tileset entero.
+- En la escena: `Mapa/Terreno` es la capa con colisión (pinta ahí paredes y suelo con el Rule Tile Terreno),
+  `Mapa/Fondo` es la pared de atrás (tuberías incluidas, son tiles normales).
+- Trampas, máquinas, puertas y decorado son objetos normales en `Trampas y puertas` y `Decorado`: se mueven y se duplican.
+  Los láseres y el vapor salen hacia el `up` de su objeto (gíralos para otras direcciones).
+- **Replica > Crear laboratorio** regenera la escena desde `LabBuilder.cs` (borra lo retocado a mano).
+- Las máquinas (puertas, montacargas, cristal, cinta, prensa, vapor, suelo eléctrico, tanque) son sprites dibujados
+  con la paleta del tileset en `Assets/Sprites/Map/Generado`: se pueden cambiar por arte de verdad sin tocar código.
+
+### Sistemas (`Assets/Scripts/World`)
+- `ZoneDoor`: puerta de zona (se cierra detrás, checkpoint). `FinalDoor`: salida, funde a negro, sin puntuación.
+- `AutoDoor`: puerta automática; se abre con lo que tenga delante (jugador, réplica o cuerpo) y un cuerpo la atasca abierta.
+- `CounterweightLift`: montacargas; la cabina sube si el contrapeso carga más que ella.
+- `FragileGlass`: suelo de cristal que aguanta `maxLoad`; al límite se raja, con más se rompe.
+- `Conveyor`: cinta transportadora; arrastra al jugador, réplicas y cuerpos.
+- `HydraulicPress`: compactadora; aplasta, compacta cuerpos normales y se atasca con uno congelado. Encima te sube.
+- `SteamVent`: vapor intermitente; quema y lo corta lo que tenga delante.
+- `ElectricFloor`: suelo electrificado a pulsos; encima de un cuerpo no te pasa nada.
+- `SecurityLaser`, `Turret`, `WastePool` + `Body` (los cuerpos flotan), `LightFlicker`, `SpriteLoop`.
+- `Load`: cuenta lo que pesa encima de algo (los cuerpos congelados están en estasis: no pesan).
+
+### Problemas detectados al probarlo
+- [x] **Bloqueo por error**: T reinicia solo la zona (quita sus cuerpos) y las salidas importantes son altas o tienen otra ruta.
+- [x] **Coherencia**: fuera sierras y cuchillas; cada sala tiene un uso (corrales, sala de control, archivo, garita,
+      planta de residuos con tanque y muelle) y cada peligro es de laboratorio (seguridad, maquinaria, residuos).
+- [x] **Creatividad**: salas abiertas con varios sistemas que reaccionan a los cuerpos; cada obstáculo tiene 2 o más formas.
+- [x] Rincones del terreno: el Rule Tile ya usa piezas de rincón (tiles 8, 9, 18 y 19, generadas desde el tileset).
+- [ ] Probarlo jugando: ajustar tiempos (vapor, prensa, suelo eléctrico) y ver qué soluciones salen que no estaban pensadas.
+
+### Ideas siguientes
+- [ ] Sala de presión (la idea de reventar una sala llenándola de réplicas).
+- [ ] Megafonía en texto que reacciona ("Espécimen fuera de contención").
+- [ ] Sonido: zumbido de fluorescentes, láser, torreta, prensa, vapor, cinta.
+- [ ] Arte de verdad para las máquinas y vallas de los corrales.
 
 ## 4. Pendientes técnicos
 - [ ] Borrar `D:\ReplicaTestCopy` (copia de pruebas, ~2 GB).

@@ -45,7 +45,7 @@ Material:
     - _Flash: 0
     - _FlickerAmount: 0.12
     - _Opacity: 0.85
-    - _PixelsPerUnit: 16
+    - _PixelsPerUnit: 32
     - _RampAmount: 1
     - _RampSteps: 4
     - _ScanAmount: 0.3
