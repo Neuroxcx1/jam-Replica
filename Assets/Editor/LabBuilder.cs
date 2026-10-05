@@ -1,21 +1,26 @@
 using System.Collections.Generic;
 using System.Linq;
+using TMPro;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
+using UnityEngine.EventSystems;
+using UnityEngine.InputSystem.UI;
 using UnityEngine.Rendering;
 using UnityEngine.Rendering.Universal;
 using UnityEngine.Tilemaps;
+using UnityEngine.UI;
 
 // Replica > Crear laboratorio
 // Monta la escena "Laboratorio": 3 zonas seguidas pintadas con la Tile Palette "Laboratorio",
-// con sus trampas, puertas y luces. Luego todo se puede retocar a mano (pintar tiles, mover trampas...),
-// pero volver a ejecutar esto borra esos cambios.
+// con sus trampas, puertas y luces, y antes la escena "Intro": la sala del tanque donde empiezas.
+// Luego todo se puede retocar a mano (pintar tiles, mover trampas...), pero volver a ejecutar esto borra esos cambios.
 //
 // Coordenadas: 1 unidad = 1 tile de 32 px. (x, y) es la casilla; y crece hacia arriba.
 public static class LabBuilder
 {
     const string ScenePath = "Assets/Scenes/Laboratorio.unity";
+    const string IntroPath = "Assets/Scenes/Intro.unity";
     const string VolumePath = "Assets/Settings/Laboratorio_Postproceso.asset";
     const string WasteMaterialPath = "Assets/Effects/Materials/Desechos.mat";
     const int Width = 143;
@@ -50,10 +55,18 @@ public static class LabBuilder
     {
         if (!EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo()) return;
         if (System.IO.File.Exists(ScenePath) &&
-            !EditorUtility.DisplayDialog("Replica", "Esto borra y regenera " + ScenePath + ". ¿Seguir?", "Sí", "Cancelar"))
+            !EditorUtility.DisplayDialog("Replica", "Esto borra y regenera " + ScenePath + " y " + IntroPath + ". ¿Seguir?", "Sí", "Cancelar"))
             return;
 
         art = LabAssets.Build();
+        BuildLab();
+        // despues del laboratorio: la sala del tanque usa los mismos prefabs del jugador
+        BuildIntro();
+        Debug.Log("Laboratorio creado en " + ScenePath + " y la sala del tanque en " + IntroPath);
+    }
+
+    static void BuildLab()
+    {
         var scene = PrototypeBuilder.NewSceneFromTemplate(ScenePath);
         Player player = PrototypeBuilder.CreatePlayerAndPrefabs(new Vector3(4.5f, 6.5f));
 
@@ -63,29 +76,41 @@ public static class LabBuilder
         lines = AssetDatabase.LoadAssetAtPath<Material>("Assets/Effects/Materials/FX_Pixel.mat");
         waste = CreateWasteMaterial();
 
-        decor = new GameObject("Decorado").transform;
-        traps = new GameObject("Trampas y puertas").transform;
-        lights = new GameObject("Luces").transform;
-        solid = new bool[Width, Height];
-        pipes = new List<(Vector3Int, TileBase)>();
-
-        // todo es roca y las salas se excavan
-        Fill(0, 0, Width - 1, Height - 1);
+        NewMap(Width, Height);
         Containment();
         Security();
         WasteZone();
         PaintTiles();
 
         SetupLighting(player);
-        PrototypeBuilder.SetupCamera(player.transform);
-        Camera.main.backgroundColor = new Color(0.06f, 0.065f, 0.08f);
+        SetupCamera(player, Width);
         SetupPostProcessing();
         Hud();
+        AddAftershock(player);
 
         EditorSceneManager.SaveScene(scene);
         PrototypeBuilder.AddSceneToBuildSettings(ScenePath, true);
-        Selection.activeGameObject = player.gameObject;
-        Debug.Log("Laboratorio creado en " + ScenePath);
+    }
+
+    // todo es roca y las salas se excavan
+    static void NewMap(int width, int height)
+    {
+        decor = new GameObject("Decorado").transform;
+        traps = new GameObject("Trampas y puertas").transform;
+        lights = new GameObject("Luces").transform;
+        solid = new bool[width, height];
+        pipes = new List<(Vector3Int, TileBase)>();
+        Fill(0, 0, width - 1, height - 1);
+    }
+
+    static void SetupCamera(Player player, int width)
+    {
+        PrototypeBuilder.SetupCamera(player.transform);
+        // la camara ve 30 casillas de ancho: su centro se queda a 15 de los bordes del mapa
+        var follow = new SerializedObject(Camera.main.GetComponent<CameraFollow>());
+        follow.FindProperty("limitsX").vector2Value = new Vector2(2f + 15f, width - 1 - 15f);
+        follow.ApplyModifiedPropertiesWithoutUndo();
+        Camera.main.backgroundColor = new Color(0.06f, 0.065f, 0.08f);
     }
 
     // ---------- zonas ----------
@@ -93,7 +118,7 @@ public static class LabBuilder
     // para que se pueda resolver de varias formas. Las salidas tienen otra ruta o son altas para que
     // un cuerpo mal puesto no las tape (y si pasa, con la Q lo recuperas).
 
-    // Zona 1 - Pabellon de especimenes. Sales de tu corral; la salida esta en la plataforma de observacion
+    // Zona 1 - Pabellon de especimenes. Entras por la puerta de la sala del tanque (escena Intro); la salida esta en la plataforma de observacion
     // (5 de alto, el techo de la sala de control, que esta cerrada). El suelo de los corrales esta electrificado.
     // Para subir: el montacargas (cargar el contrapeso con replicas), una escalera de cuerpos congelados...
     static void Containment()
@@ -103,9 +128,10 @@ public static class LabBuilder
         Fill(33, 6, 43, 10);           // sala de control (hueca, paredes de 1); su techo es la plataforma de observacion
         Carve(34, 6, 42, 9);
         LockedDoor(33, 6);
+        LockedDoor(2, 6);              // por donde vienes, se cierra detras de ti
+        ReplicaSample(12.5f, 12.5f);   // en lo alto de los corrales: subiendose a copias congeladas
         Lift(28, 31, 6, 5);            // cabina en x 28-30, contrapeso en x 31-32
 
-        Prop("tanque", 3.5f, 6, false);
         Prop("escritorio", 18f, 6, false);
         Prop("ordenador", 20.5f, 6, false);
         Prop("consola", 35.5f, 6, false);
@@ -114,7 +140,7 @@ public static class LabBuilder
         Terminal(36.5f, 11);
         Prop("escritorio", 39.5f, 11, false);
         // los controles, pegados en la pared del corral donde empiezas
-        AddSprite(NewObject(decor, "Cartel de controles", new Vector3(5.5f, 9.5f), 0), art.controlsSign, -9);
+        AddSprite(NewObject(decor, "Cartel de controles", new Vector3(6.5f, 9.5f), 0), art.controlsSign, -9);
 
         Lamp(5f, 17, false);
         Lamp(11f, 17, true);
@@ -146,6 +172,7 @@ public static class LabBuilder
         Laser(52, 11, 16, 0f, 0f);
         Laser(68, 11, 16, 1.6f, 1.1f); // intermitente: se puede cruzar a tiempo
         AutoDoor(83, 4);               // puerta de la garita (3 de alto)
+        ReplicaSample(46.5f, 5f);      // al fondo del archivo
         Turret(87, 4);
 
         Prop("cajas", 47.5f, 4, true);
@@ -188,6 +215,7 @@ public static class LabBuilder
         Steam(105.5f, 16f, false, 12f, 1f, 2f, 1.5f);
         Steam(117.5f, 9f, true, 3f, 1.2f, 1.8f, 0.6f); // tuberia rota en la pasarela
         FinalDoor(141, 11);
+        ReplicaSample(124f, 12.5f);    // encima del tanque, sobre el hueco de la pasarela
 
         Prop("barril_toxico", 112.5f, 4, false);
         Prop("barriles", 130.5f, 4, false);
@@ -208,6 +236,309 @@ public static class LabBuilder
         HorizontalPipe(94, 140, 14);
         VerticalPipe(132, 4, 13);
         VerticalPipe(129, 4, 13);
+    }
+
+    // ---------- sala del tanque (escena Intro) ----------
+    // Una sala propia antes del laboratorio: el tanque del especimen (tu) en medio, cientificos trabajando
+    // alrededor y otros pasando por delante de la camara. Tras la cinematica (IntroCinematic) caminas hacia
+    // la derecha; al cruzar la puerta empieza el laboratorio.
+    static void BuildIntro()
+    {
+        const float tankX = 16.5f, floorY = 4f;
+        var scene = PrototypeBuilder.NewSceneFromTemplate(IntroPath);
+        Player player = PrototypeBuilder.CreateAnotherPlayer(new Vector3(tankX, floorY + 0.5f));
+
+        NewMap(36, 18);
+        Carve(2, 4, 31, 13);           // la sala
+        Carve(32, 4, 34, 6);           // pasillo de salida
+        AutoDoor(32, 4);
+        var exit = NewObject(traps, "Salida al laboratorio", new Vector3(33.5f, 5.5f), noRaycast);
+        var trigger = exit.AddComponent<BoxCollider2D>();
+        trigger.isTrigger = true;
+        trigger.size = new Vector2(1f, 3f);
+        exit.AddComponent<SceneDoor>();
+        AddSprite(NewObject(decor, "Cartel de moverse", new Vector3(21f, 7.5f), 0), art.moveSign, -9);
+
+        Prop("escritorio", 5f, 4, false);
+        Prop("ordenador", 7.5f, 4, false);
+        Terminal(10.5f, 4);
+        Prop("consola", 21f, 4, false);
+        Prop("tanque", 24.5f, 4, false);
+        Prop("barriles", 27f, 4, false);
+        Lamp(7f, 14, false);
+        Lamp(12f, 14, true);
+        Lamp(21f, 14, false);
+        Lamp(26f, 14, false);
+        Alarm(29.5f, 14);
+        HorizontalPipe(2, 31, 12);
+        VerticalPipe(3, 4, 11);
+        PaintTiles();
+
+        SpecimenTank tank = Tank(tankX, floorY, out Light2D glow, out SpriteRenderer liquid);
+
+        // dos cientificos pasan por delante de la camara (se les ve de cintura para arriba) y otro trabaja junto al tanque
+        var scientists = new[]
+        {
+            NewScientist(art.foregroundScientists[0], new Vector3(11f, floorY - 2f), new Vector2(9.5f, 12.5f), tankX, 20),
+            NewScientist(art.foregroundScientists[1], new Vector3(22f, floorY - 2f), new Vector2(20.5f, 23.5f), tankX, 20),
+            NewScientist(art.scientists[1], new Vector3(20f, floorY), new Vector2(19f, 22.5f), tankX, 1),
+        };
+        float[] exits = { 4f, 29f, 30.5f };
+        foreach (Scientist scientist in scientists.Take(2))
+        {
+            var so = new SerializedObject(scientist);
+            so.FindProperty("walkSpeed").floatValue = 1.3f;
+            so.FindProperty("runSpeed").floatValue = 7f;
+            so.ApplyModifiedPropertiesWithoutUndo();
+        }
+
+        SetupLighting(player);
+        SetupCamera(player, 36);
+        AddVolume(AssetDatabase.LoadAssetAtPath<VolumeProfile>(VolumePath));
+
+        // el apagon afecta a toda la sala menos al tanque y al jugador
+        var intro = NewObject(decor, "Cinematica", new Vector3(tankX, floorY), 0).AddComponent<IntroCinematic>();
+        SetRef(intro, "player", player);
+        SetRef(intro, "tank", tank);
+        SetArray(intro, "scientists", scientists);
+        SetRef(intro, "dust", Dust(2f, 32f, 13.8f));
+        SetRef(intro, "pixelCamera", Camera.main.GetComponent<PixelPerfectCamera>());
+        SetRef(intro, "globalLight", Object.FindObjectsByType<Light2D>().First(l => l.lightType == Light2D.LightType.Global));
+        SetArray(intro, "lights", Object.FindObjectsByType<Light2D>()
+            .Where(l => l.lightType != Light2D.LightType.Global && l != glow && !l.transform.IsChildOf(player.transform)).ToArray());
+        SetArray(intro, "glows", Object.FindObjectsByType<SpriteRenderer>().Where(sr => sr.sharedMaterial == unlit && sr != liquid).ToArray());
+        SetArray(intro, "machines", Object.FindObjectsByType<LightFlicker>());
+
+        // la cinematica se ve desde la sala de observacion, a traves de su ventana (despues de buscar los brillos
+        // del apagon: el cristal y la pared no se apagan)
+        SetRef(intro, "window", AddObservationWindow(new Vector2(tankX, 7f)));
+        SetRef(intro, "menu", AddTitleMenu(intro));
+        var exitsProperty = new SerializedObject(intro);
+        SerializedProperty list = exitsProperty.FindProperty("exits");
+        list.arraySize = exits.Length;
+        for (int i = 0; i < exits.Length; i++) list.GetArrayElementAtIndex(i).floatValue = exits[i];
+        exitsProperty.ApplyModifiedPropertiesWithoutUndo();
+
+        EditorSceneManager.SaveScene(scene);
+        PrototypeBuilder.AddSceneToBuildSettings(IntroPath, true);
+    }
+
+    // tanque del especimen: detras el fondo y el liquido, delante el cristal; una tuberia lo une al techo
+    // la sala de observacion, del lado de la camara: pared oscura con una ventana de 12x7 en un marco de metal.
+    // Va por delante de la sala del tanque y por detras de los cientificos que pasan por delante
+    static ObservationWindow AddObservationWindow(Vector2 center)
+    {
+        var go = NewObject(decor, "Sala de observacion", center, 0);
+        Vector2 hole = new Vector2(12f, 7f);
+        Vector2 outer = hole + Vector2.one * (12f / 32f);
+        SpriteRenderer glass = AddSprite(NewObject(go.transform, "Cristal", center, 0), art.windowGlass[0], 13);
+        glass.sharedMaterial = unlit;
+        AddSprite(NewObject(go.transform, "Marco", center, 0), art.windowFrame, 14).sharedMaterial = unlit;
+
+        // pared de sobra alrededor del marco para cubrir todo lo que ve la camara durante la cinematica
+        const float far = 20f;
+        WallPiece(go.transform, center + new Vector2(-(outer.x + far) / 2f, 0f), new Vector2(far, outer.y + 2f * far));
+        WallPiece(go.transform, center + new Vector2((outer.x + far) / 2f, 0f), new Vector2(far, outer.y + 2f * far));
+        WallPiece(go.transform, center + new Vector2(0f, (outer.y + far) / 2f), new Vector2(outer.x, far));
+        WallPiece(go.transform, center + new Vector2(0f, -(outer.y + far) / 2f), new Vector2(outer.x, far));
+
+        ParticleSystem shards = Burst(go.transform, "Cristales de la ventana", center, hole, 140,
+            new Color(0.85f, 0.97f, 1f), new Color(0.5f, 0.75f, 0.85f));
+        shards.GetComponent<ParticleSystemRenderer>().sortingOrder = 16;
+
+        var window = go.AddComponent<ObservationWindow>();
+        SetRef(window, "glass", glass);
+        SetRef(window, "cracked", art.windowGlass[1]);
+        SetRef(window, "broken", art.windowGlass[2]);
+        SetRef(window, "shards", shards);
+        return window;
+    }
+
+    // menu del principio, como en God of War: el titulo y las opciones a la izquierda, encima de la escena
+    static GameObject AddTitleMenu(IntroCinematic intro)
+    {
+        TMP_FontAsset font = AssetDatabase.LoadAssetAtPath<TMP_FontAsset>("Assets/PixelUISciFiFree/Font/Pixel UI Sci-Fi TMP.asset");
+        var go = new GameObject("Menu de inicio", typeof(RectTransform));
+        go.AddComponent<Canvas>().renderMode = RenderMode.ScreenSpaceOverlay;
+        var scaler = go.AddComponent<CanvasScaler>();
+        scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
+        scaler.referenceResolution = new Vector2(1920f, 1080f);
+        scaler.matchWidthOrHeight = 0.5f;
+        go.AddComponent<GraphicRaycaster>();
+        var group = go.AddComponent<CanvasGroup>();
+
+        // tamaños multiplos de 8 (la letra es pixel art de 8): asi se ve nitida
+        MenuText(go.transform, "Titulo", "REPLICA", 96, new Vector2(160f, 160f), Color.white, font);
+        Button start = MenuButton(go.transform, "INICIAR", new Vector2(160f, -16f), font);
+        Button quit = MenuButton(go.transform, "SALIR", new Vector2(160f, -88f), font);
+        MenuText(go.transform, "Ayuda", "W S / FLECHAS     ENTER", 24, new Vector2(164f, -400f), new Color(1f, 1f, 1f, 0.4f), font);
+        new GameObject("EventSystem", typeof(EventSystem), typeof(InputSystemUIInputModule));
+
+        var menu = go.AddComponent<TitleMenu>();
+        SetRef(menu, "intro", intro);
+        SetRef(menu, "startButton", start);
+        SetRef(menu, "quitButton", quit);
+        SetRef(menu, "group", group);
+        return go;
+    }
+
+    static TextMeshProUGUI MenuText(Transform parent, string name, string text, float size, Vector2 position, Color color, TMP_FontAsset font)
+    {
+        var go = new GameObject(name, typeof(RectTransform));
+        go.transform.SetParent(parent, false);
+        var rect = (RectTransform)go.transform;
+        rect.anchorMin = rect.anchorMax = new Vector2(0f, 0.5f);
+        rect.pivot = new Vector2(0f, 0.5f);
+        rect.anchoredPosition = position;
+        rect.sizeDelta = new Vector2(1000f, size * 1.5f);
+        var label = go.AddComponent<TextMeshProUGUI>();
+        label.font = font;
+        label.fontSize = size;
+        label.color = color;
+        label.text = text;
+        label.alignment = TextAlignmentOptions.MidlineLeft;
+        return label;
+    }
+
+    // opcion del menu: el texto se pone verde al pasar el raton o al elegirla con el teclado o el mando
+    static Button MenuButton(Transform parent, string text, Vector2 position, TMP_FontAsset font)
+    {
+        TextMeshProUGUI label = MenuText(parent, text, text, 48, position, Color.white, font);
+        ((RectTransform)label.transform).sizeDelta = new Vector2(400f, 64f);
+        var button = label.gameObject.AddComponent<Button>();
+        button.targetGraphic = label;
+        ColorBlock colors = button.colors;
+        colors.normalColor = new Color(0.55f, 0.6f, 0.65f);
+        colors.highlightedColor = colors.selectedColor = new Color(0.45f, 1f, 0.6f);
+        colors.pressedColor = Color.white;
+        button.colors = colors;
+        return button;
+    }
+
+    static void WallPiece(Transform parent, Vector2 center, Vector2 size)
+    {
+        SpriteRenderer sr = AddSprite(NewObject(parent, "Pared", center, 0), art.windowWall, 14);
+        sr.sharedMaterial = unlit;
+        sr.drawMode = SpriteDrawMode.Tiled;
+        sr.size = size;
+    }
+
+    static SpecimenTank Tank(float x, float floorY, out Light2D glow, out SpriteRenderer liquid)
+    {
+        float top = floorY + 5.5f, ceiling = FirstSolidAbove((int)x, (int)floorY);
+        var go = NewObject(decor, "Tanque del especimen", new Vector3(x, floorY), 0);
+        AddSprite(go, art.specimenTank, -2);
+        liquid = AddSprite(NewObject(go.transform, "Liquido", go.transform.position, 0), art.specimenLiquid, -1);
+        liquid.sharedMaterial = unlit;
+        SpriteRenderer glass = AddSprite(NewObject(go.transform, "Cristal", go.transform.position, 0), art.specimenGlass[0], 6);
+        SpriteRenderer pipe = AddSprite(NewObject(go.transform, "Tuberia", new Vector3(x, (top + ceiling) / 2f), 0), art.piston, -3);
+        pipe.drawMode = SpriteDrawMode.Tiled;
+        pipe.size = new Vector2(12f / 32f, ceiling - top);
+        glow = AddLight(go.transform, "Luz del tanque", new Vector3(x, floorY + 2.75f), new Color(0.35f, 1f, 0.55f), 1.3f, 7f);
+
+        var tank = go.AddComponent<SpecimenTank>();
+        SetRef(tank, "glass", glass);
+        SetRef(tank, "cracked", art.specimenGlass[1]);
+        SetRef(tank, "broken", art.specimenGlass[2]);
+        SetRef(tank, "liquid", liquid);
+        SetRef(tank, "bubbles", Bubbles(go.transform, new Vector3(x, floorY + 0.6f)));
+        SetRef(tank, "shards", Burst(go.transform, "Cristales", new Vector3(x, floorY + 2.75f), new Vector2(2.4f, 4.4f), 60,
+            new Color(0.85f, 0.97f, 1f), new Color(0.5f, 0.8f, 0.9f)));
+        SetRef(tank, "splash", Burst(go.transform, "Salpicadura", new Vector3(x, floorY + 1.2f), new Vector2(2.4f, 1.6f), 70,
+            new Color(0.45f, 1f, 0.6f), new Color(0.15f, 0.6f, 0.3f)));
+        SetRef(tank, "glow", glow);
+        return tank;
+    }
+
+    static Scientist NewScientist(Sprite[] frames, Vector3 position, Vector2 walkRange, float lookAtX, int order)
+    {
+        var go = NewObject(decor, "Cientifico", position, 0);
+        AddSprite(go, frames[0], order);
+        var scientist = go.AddComponent<Scientist>();
+        SetArray(scientist, "frames", frames);
+        var so = new SerializedObject(scientist);
+        so.FindProperty("walkRange").vector2Value = walkRange;
+        so.FindProperty("lookAtX").floatValue = lookAtX;
+        so.ApplyModifiedPropertiesWithoutUndo();
+        return scientist;
+    }
+
+    // burbujas que suben por el liquido del tanque
+    static ParticleSystem Bubbles(Transform parent, Vector3 position)
+    {
+        var ps = NewObject(parent, "Burbujas", position, 0).AddComponent<ParticleSystem>();
+        var main = ps.main;
+        main.startLifetime = 2.2f;
+        main.startSpeed = 0f;
+        main.startSize = new ParticleSystem.MinMaxCurve(1f / 32f, 3f / 32f);
+        main.startColor = new ParticleSystem.MinMaxGradient(new Color(0.75f, 1f, 0.85f, 0.8f), new Color(0.4f, 0.9f, 0.6f, 0.6f));
+        main.simulationSpace = ParticleSystemSimulationSpace.World;
+        var emission = ps.emission;
+        emission.rateOverTime = 6f;
+        var shape = ps.shape;
+        shape.shapeType = ParticleSystemShapeType.Box;
+        shape.scale = new Vector3(1.3f, 0.1f, 0f);
+        var velocity = ps.velocityOverLifetime;
+        velocity.enabled = true;
+        velocity.space = ParticleSystemSimulationSpace.World;
+        velocity.x = new ParticleSystem.MinMaxCurve(-0.1f, 0.1f);
+        velocity.y = new ParticleSystem.MinMaxCurve(1f, 1.2f);
+        velocity.z = new ParticleSystem.MinMaxCurve(0f, 0f);
+        var renderer = ps.GetComponent<ParticleSystemRenderer>();
+        renderer.sharedMaterial = lines;
+        renderer.sortingOrder = 0;
+        return ps;
+    }
+
+    // estallido de pixeles en todas direcciones que caen con gravedad (cristales, salpicaduras)
+    static ParticleSystem Burst(Transform parent, string name, Vector3 position, Vector2 area, int count, Color a, Color b)
+    {
+        var ps = NewObject(parent, name, position, 0).AddComponent<ParticleSystem>();
+        var main = ps.main;
+        main.playOnAwake = false;
+        main.loop = false;
+        main.duration = 1f;
+        main.startLifetime = new ParticleSystem.MinMaxCurve(0.6f, 1.2f);
+        main.startSpeed = new ParticleSystem.MinMaxCurve(2f, 6f);
+        main.startSize = new ParticleSystem.MinMaxCurve(2f / 32f, 4f / 32f);
+        main.startColor = new ParticleSystem.MinMaxGradient(a, b);
+        main.gravityModifier = 1.5f;
+        main.simulationSpace = ParticleSystemSimulationSpace.World;
+        var emission = ps.emission;
+        emission.rateOverTime = 0f;
+        emission.SetBursts(new[] { new ParticleSystem.Burst(0f, (short)count) });
+        var shape = ps.shape;
+        shape.shapeType = ParticleSystemShapeType.Box;
+        shape.scale = new Vector3(area.x, area.y, 0f);
+        shape.randomDirectionAmount = 1f;
+        var renderer = ps.GetComponent<ParticleSystemRenderer>();
+        renderer.sharedMaterial = lines;
+        renderer.sortingOrder = 7;
+        return ps;
+    }
+
+    // polvo que cae del techo con el temblor
+    static ParticleSystem Dust(float x0, float x1, float y)
+    {
+        var ps = NewObject(decor, "Polvo del temblor", new Vector3((x0 + x1) / 2f, y), 0).AddComponent<ParticleSystem>();
+        var main = ps.main;
+        main.playOnAwake = false;
+        main.startLifetime = new ParticleSystem.MinMaxCurve(1.5f, 2.5f);
+        main.startSpeed = 0f;
+        main.startSize = new ParticleSystem.MinMaxCurve(1f / 32f, 3f / 32f);
+        main.startColor = new ParticleSystem.MinMaxGradient(new Color(0.62f, 0.62f, 0.65f, 0.85f), new Color(0.4f, 0.42f, 0.46f, 0.85f));
+        main.gravityModifier = 0.4f;
+        main.maxParticles = 300;
+        main.simulationSpace = ParticleSystemSimulationSpace.World;
+        var emission = ps.emission;
+        emission.rateOverTime = 70f;
+        var shape = ps.shape;
+        shape.shapeType = ParticleSystemShapeType.Box;
+        shape.scale = new Vector3(x1 - x0, 0.1f, 0f);
+        var renderer = ps.GetComponent<ParticleSystemRenderer>();
+        renderer.sharedMaterial = lines;
+        renderer.sortingOrder = 7;
+        return ps;
     }
 
     // ---------- mapa ----------
@@ -241,10 +572,11 @@ public static class LabBuilder
 
         var rock = new List<Vector3Int>();
         var room = new List<Vector3Int>();
-        for (int x = -Margin; x < Width + Margin; x++)
-            for (int y = -Margin; y < Height + Margin; y++)
+        int width = solid.GetLength(0), height = solid.GetLength(1);
+        for (int x = -Margin; x < width + Margin; x++)
+            for (int y = -Margin; y < height + Margin; y++)
             {
-                bool inside = x >= 0 && y >= 0 && x < Width && y < Height;
+                bool inside = x >= 0 && y >= 0 && x < width && y < height;
                 (inside && !solid[x, y] ? room : rock).Add(new Vector3Int(x, y, 0));
             }
         terrain.SetTiles(rock.ToArray(), Enumerable.Repeat<TileBase>(art.terrain, rock.Count).ToArray());
@@ -279,7 +611,7 @@ public static class LabBuilder
         Sprite open = art.doorTurningOff[art.doorTurningOff.Length - 1];
         AddSprite(go, open, 1);
         var loop = go.AddComponent<SpriteLoop>();
-        SetSprites(loop, "frames", new[] { open });
+        SetArray(loop, "frames", new[] { open });
 
         // el trigger esta en la casilla de despues: la puerta se cierra cuando ya has pasado
         var trigger = go.AddComponent<BoxCollider2D>();
@@ -299,8 +631,8 @@ public static class LabBuilder
         SetRef(door, "spawnPoint", spawnPoint);
         SetRef(door, "barrier", loop);
         SetRef(door, "doorLight", doorLight);
-        SetSprites(door, "closingFrames", Enumerable.Reverse(art.doorTurningOff).ToArray());
-        SetSprites(door, "closedFrames", art.doorClosed);
+        SetArray(door, "closingFrames", Enumerable.Reverse(art.doorTurningOff).ToArray());
+        SetArray(door, "closedFrames", art.doorClosed);
     }
 
     static void FinalDoor(int x, int y)
@@ -382,7 +714,7 @@ public static class LabBuilder
         SetRef(turret, "muzzle", muzzle);
         SetRef(turret, "body", body);
         SetRef(turret, "idleSprite", art.turret[0]);
-        SetSprites(turret, "chargeFrames", art.turret.Skip(12).Take(6).ToArray());
+        SetArray(turret, "chargeFrames", art.turret.Skip(12).Take(6).ToArray());
         SetRef(turret, "sight", sight);
         SetRef(turret, "bolt", bolt);
         SetRef(turret, "flash", flash);
@@ -665,7 +997,7 @@ public static class LabBuilder
 
     static float FirstSolidAbove(int x, int y)
     {
-        while (y < Height && !solid[x, y]) y++;
+        while (y < solid.GetLength(1) && !solid[x, y]) y++;
         return y;
     }
 
@@ -717,6 +1049,21 @@ public static class LabBuilder
         material.SetFloat("_PixelsPerUnit", 32f);
         EditorUtility.SetDirty(material);
         return material;
+    }
+
+    // muestra de mutageno: una replica mas
+    static void ReplicaSample(float x, float y)
+    {
+        var go = NewObject(traps, "Muestra de mutageno", new Vector3(x, y), noRaycast);
+        var trigger = go.AddComponent<CircleCollider2D>();
+        trigger.isTrigger = true;
+        trigger.radius = 0.45f;
+        var visual = NewObject(go.transform, "Vial", go.transform.position, 0);
+        AddSprite(visual, art.replicaSample, 5).sharedMaterial = unlit;
+        AddLight(go.transform, "Brillo", go.transform.position, new Color(0.35f, 1f, 0.55f), 0.8f, 2.5f);
+        var pickup = go.AddComponent<ReplicaPickup>();
+        SetRef(pickup, "visual", visual.transform);
+        SetRef(pickup, "collectEffect", AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Effects/Prefabs/Absorb.prefab"));
     }
 
     // ---------- decorado y luces ----------
@@ -809,8 +1156,6 @@ public static class LabBuilder
 
     static void SetupPostProcessing()
     {
-        Camera.main.GetUniversalAdditionalCameraData().renderPostProcessing = true;
-
         AssetDatabase.DeleteAsset(VolumePath);
         var profile = ScriptableObject.CreateInstance<VolumeProfile>();
         AssetDatabase.CreateAsset(profile, VolumePath);
@@ -828,9 +1173,25 @@ public static class LabBuilder
         color.contrast.Override(12f);
         AssetDatabase.SaveAssets();
 
+        AddVolume(profile);
+    }
+
+    static void AddVolume(VolumeProfile profile)
+    {
+        Camera.main.GetUniversalAdditionalCameraData().renderPostProcessing = true;
         var volume = new GameObject("Postproceso").AddComponent<Volume>();
         volume.isGlobal = true;
         volume.sharedProfile = profile;
+    }
+
+    // al entrar desde la sala del tanque, una replica del temblor: polvo y parpadeo en lo que se ve al empezar
+    static void AddAftershock(Player player)
+    {
+        var shock = NewObject(decor, "Replica del temblor", new Vector3(17f, 16.8f), 0).AddComponent<Aftershock>();
+        SetRef(shock, "dust", Dust(2f, 32f, 16.8f));
+        SetArray(shock, "lights", Object.FindObjectsByType<Light2D>()
+            .Where(l => l.lightType != Light2D.LightType.Global && l.transform.position.x < 32f && !l.transform.IsChildOf(player.transform))
+            .ToArray());
     }
 
     // la interfaz (contador de replicas y panel de victoria) va en el prefab HUD: se retoca ahi y no se pierde al regenerar
@@ -873,7 +1234,7 @@ public static class LabBuilder
     static void Animate(GameObject go, Sprite[] frames, float fps)
     {
         var loop = go.AddComponent<SpriteLoop>();
-        SetSprites(loop, "frames", frames);
+        SetArray(loop, "frames", frames);
         var so = new SerializedObject(loop);
         so.FindProperty("fps").floatValue = fps;
         so.ApplyModifiedPropertiesWithoutUndo();
@@ -911,12 +1272,12 @@ public static class LabBuilder
         so.ApplyModifiedPropertiesWithoutUndo();
     }
 
-    static void SetSprites(Object target, string field, Sprite[] sprites)
+    static void SetArray(Object target, string field, Object[] values)
     {
         var so = new SerializedObject(target);
         SerializedProperty list = so.FindProperty(field);
-        list.arraySize = sprites.Length;
-        for (int i = 0; i < sprites.Length; i++) list.GetArrayElementAtIndex(i).objectReferenceValue = sprites[i];
+        list.arraySize = values.Length;
+        for (int i = 0; i < values.Length; i++) list.GetArrayElementAtIndex(i).objectReferenceValue = values[i];
         so.ApplyModifiedPropertiesWithoutUndo();
     }
 }

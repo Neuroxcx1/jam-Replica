@@ -35,7 +35,6 @@ public class Player : MonoBehaviour
     [SerializeField] SplitEffect splitEffect;
     [SerializeField] GameObject deathEffect;
     [SerializeField] BodyEffect freezeEffect;
-    [SerializeField] BodyEffect corpseEffect;
     [SerializeField] GameObject recallEffect;
     [SerializeField] RecallGhost recallGhost;
     [SerializeField] float replicateShake = 5f;
@@ -177,15 +176,33 @@ public class Player : MonoBehaviour
         CameraFollow.Shake(replicateShake, 0.15f);
     }
 
-    // deja una copia congelada donde estas y tu sigues: la atraviesas y caes (o te subes encima si ibas hacia arriba)
+    // deja una copia congelada donde estas y te subes encima de ella.
+    // Si no cabes encima (techo justo arriba), la atraviesas y caes
     void Freeze()
     {
+        // la posicion de la fisica: la del sprite va un poco por detras (interpolacion) y al caer rapido se nota
+        Vector2 at = Rb.position;
         ReplicasLeft--;
-        GameObject body = Instantiate(bodyPrefab, transform.position, Quaternion.identity);
+        GameObject body = Instantiate(bodyPrefab, at, Quaternion.identity);
         body.GetComponent<Rigidbody2D>().bodyType = RigidbodyType2D.Static;
-        body.GetComponent<Body>().IgnoreUntilApart(col);
-        if (freezeEffect != null) Instantiate(freezeEffect, transform.position, Quaternion.identity).Attach(body);
+        if (freezeEffect != null) Instantiate(freezeEffect, at, Quaternion.identity).Attach(body);
         placed.Add(body);
+
+        Vector2 top = at + Vector2.up * (body.GetComponent<BoxCollider2D>().size.y + 0.02f);
+        if (Physics2D.OverlapBox(top, col.bounds.size * 0.95f, 0f, groundLayer) == null)
+        {
+            Rb.position = top;
+            transform.position = top;
+            Rb.linearVelocity = new Vector2(Rb.linearVelocity.x, 0f);
+        }
+        else body.GetComponent<Body>().IgnoreUntilApart(col);
+    }
+
+    // muestra de mutageno: replicas de mas, tambien en el maximo
+    public void AddReplicas(int amount)
+    {
+        maxReplicas += amount;
+        ReplicasLeft += amount;
     }
 
     // te devuelve la replica mas antigua que pusiste, en el mismo orden en que las pusiste
@@ -210,19 +227,12 @@ public class Player : MonoBehaviour
         if (index >= 0) placed[index] = newPiece;
     }
 
-    // al morir (laser, torreta, prensa...) dejas tu cuerpo si te quedan replicas y vuelves al checkpoint
+    // al morir (laser, torreta, prensa...) no dejas nada: vuelves al checkpoint
     public void Die()
     {
         if (IsDead) return;
 
         if (deathEffect != null) Instantiate(deathEffect, transform.position, Quaternion.identity);
-        if (ReplicasLeft > 0)
-        {
-            ReplicasLeft--;
-            GameObject body = Instantiate(bodyPrefab, transform.position, Quaternion.identity);
-            if (corpseEffect != null) Instantiate(corpseEffect, transform.position, Quaternion.identity).Attach(body);
-            placed.Add(body);
-        }
         stateMachine.ChangeState("dead");
     }
 

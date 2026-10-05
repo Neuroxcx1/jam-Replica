@@ -16,10 +16,13 @@ public class CameraFollow : MonoBehaviour
     // al reaparecer lejos: rapido al principio y frena al llegar, pero nunca mas lento que esto
     // (tiene que ser mas rapido que el jugador para que siempre lo alcance)
     [SerializeField] float recenterSpeed = 16f;
+    // x minima y maxima del centro de la camara: asi no se ve la roca de fuera del nivel
+    [SerializeField] Vector2 limitsX = new Vector2(float.NegativeInfinity, float.PositiveInfinity);
 
     static CameraFollow current;
 
     Player player;
+    Vector2? shot;
     Vector2 focus;
     float ahead;
     bool recentering;
@@ -38,6 +41,20 @@ public class CameraFollow : MonoBehaviour
         current.shakeTimer = duration;
     }
 
+    // plano fijo para las cinematicas: la camara se queda en ese punto en vez de seguir al jugador (null = seguirlo)
+    public static void SetShot(Vector2? point)
+    {
+        if (current != null) current.shot = point;
+    }
+
+    // a donde miraria la camara siguiendo al jugador (para que una cinematica acabe justo ahi, sin saltos)
+    public static Vector2 FollowPoint()
+    {
+        Vector2 point = (Vector2)current.target.position + current.offset;
+        point.x = Mathf.Clamp(point.x, current.limitsX.x, current.limitsX.y);
+        return point;
+    }
+
     void Awake()
     {
         current = this;
@@ -50,7 +67,12 @@ public class CameraFollow : MonoBehaviour
 
     void LateUpdate()
     {
-        if (target != null)
+        if (shot.HasValue)
+        {
+            focus = shot.Value;
+            ahead = 0f;
+        }
+        else if (target != null)
         {
             Vector2 wanted = new Vector2(Snap(target.position.x), Snap(target.position.y)) + offset;
             Vector2 diff = wanted - focus;
@@ -93,6 +115,9 @@ public class CameraFollow : MonoBehaviour
             shake = new Vector2(Mathf.Round(dir.x * pixels), Mathf.Round(dir.y * pixels)) / pixelsPerUnit;
         }
 
-        transform.position = new Vector3(Snap(focus.x + ahead) + shake.x, Snap(focus.y) + shake.y, transform.position.z);
+        // en los planos de cinematica la camara se mueve suave, sin ajustarse a la rejilla de pixeles
+        float x = shot.HasValue ? focus.x : Mathf.Clamp(Snap(focus.x + ahead), limitsX.x, limitsX.y);
+        float y = shot.HasValue ? focus.y : Snap(focus.y);
+        transform.position = new Vector3(x + shake.x, y + shake.y, transform.position.z);
     }
 }

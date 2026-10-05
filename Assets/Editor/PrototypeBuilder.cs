@@ -51,6 +51,10 @@ public static class PrototypeBuilder
 
     // ---------- lo comparten la escena de prueba y el laboratorio (LabBuilder) ----------
 
+    static EffectsBuilder.EffectSet effects;
+    static Clone clonePrefab;
+    static GameObject bodyPrefab;
+
     public static int GroundLayer => groundLayer;
     public static Sprite Square => square;
 
@@ -74,11 +78,14 @@ public static class PrototypeBuilder
         noFriction = CreateNoFrictionMaterial();
         groundLayer = AddLayer("Ground");
 
-        EffectsBuilder.EffectSet fx = EffectsBuilder.Build();
-        GameObject bodyPrefab = CreateBodyPrefab(fx);
-        Clone clonePrefab = CreateClonePrefab(bodyPrefab, fx);
-        return CreatePlayer(position, clonePrefab, bodyPrefab, fx);
+        effects = EffectsBuilder.Build();
+        bodyPrefab = CreateBodyPrefab(effects);
+        clonePrefab = CreateClonePrefab(bodyPrefab, effects);
+        return CreatePlayer(position, clonePrefab, bodyPrefab, effects);
     }
+
+    // otro jugador con los prefabs que ya se generaron (para una segunda escena, sin volver a crearlos)
+    public static Player CreateAnotherPlayer(Vector3 position) => CreatePlayer(position, clonePrefab, bodyPrefab, effects);
 
     static void BuildLevel()
     {
@@ -143,7 +150,6 @@ public static class PrototypeBuilder
         SetRef(player, "splitEffect", fx.split);
         SetRef(player, "deathEffect", fx.death);
         SetRef(player, "freezeEffect", fx.freeze);
-        SetRef(player, "corpseEffect", fx.corpse);
         SetRef(player, "recallEffect", fx.respawn);
         SetRef(player, "recallGhost", fx.recallGhost);
 
