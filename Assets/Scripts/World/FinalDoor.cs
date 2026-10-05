@@ -2,47 +2,47 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.SceneManagement;
 
-// Salida del laboratorio. No hay puntuacion: al cruzarla todo se funde a negro y ya.
+// Salida del laboratorio. No hay puntuacion: al cruzarla se para el jugador y sale el panel de victoria.
 public class FinalDoor : MonoBehaviour
 {
-    [SerializeField] float fadeTime = 2.5f;
-    [SerializeField] string message = "Escapaste.";
+    [Header("Victory UI")]
+    [SerializeField] GameObject victoryPanel;
+    [SerializeField] Animator victoryAnimator;
 
-    float fade;
+    bool completed = false;
 
     void Awake()
     {
-        // apagado hasta llegar, asi OnGUI no se ejecuta cada frame
-        enabled = false;
+        victoryPanel.SetActive(false);
     }
 
     void OnTriggerEnter2D(Collider2D other)
     {
-        if (enabled || !other.TryGetComponent(out Player player)) return;
+        if (completed) return;
 
-        enabled = true;
+        if (!other.TryGetComponent<Player>(out Player player))
+            return;
+
+        completed = true;
+
+        // Detener al jugador
         player.SetAlive(false);
-        // el jugador ya no hace nada; la K la mira esta puerta
         player.enabled = false;
+
+        // Mostrar el panel
+        victoryPanel.SetActive(true);
+
+        // Reproducir la animacion de apertura
+        victoryAnimator.SetTrigger("Open");
     }
 
     void Update()
     {
-        fade = Mathf.Min(1f, fade + Time.deltaTime / fadeTime);
-        if (fade >= 1f && InputSystem.actions.FindAction("Restart").WasPressedThisFrame())
+        if (!completed)
+            return;
+
+        // el jugador ya no hace nada, asi que la K (reiniciar) la mira esta puerta
+        if (InputSystem.actions.FindAction("Restart").WasPressedThisFrame())
             SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
-    }
-
-    void OnGUI()
-    {
-        GUI.color = new Color(0f, 0f, 0f, fade);
-        GUI.DrawTexture(new Rect(0, 0, Screen.width, Screen.height), Texture2D.whiteTexture);
-
-        GUI.color = new Color(1f, 1f, 1f, Mathf.Clamp01(fade * 2f - 1f));
-        var style = new GUIStyle(GUI.skin.label) { fontSize = Screen.height / 16, alignment = TextAnchor.MiddleCenter };
-        GUI.Label(new Rect(0, 0, Screen.width, Screen.height), message, style);
-
-        style.fontSize = Screen.height / 40;
-        GUI.Label(new Rect(0, Screen.height * 0.6f, Screen.width, Screen.height * 0.1f), "K para empezar de nuevo", style);
     }
 }

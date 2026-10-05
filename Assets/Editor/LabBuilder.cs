@@ -80,6 +80,7 @@ public static class LabBuilder
         PrototypeBuilder.SetupCamera(player.transform);
         Camera.main.backgroundColor = new Color(0.06f, 0.065f, 0.08f);
         SetupPostProcessing();
+        Hud();
 
         EditorSceneManager.SaveScene(scene);
         PrototypeBuilder.AddSceneToBuildSettings(ScenePath, true);
@@ -830,6 +831,16 @@ public static class LabBuilder
         var volume = new GameObject("Postproceso").AddComponent<Volume>();
         volume.isGlobal = true;
         volume.sharedProfile = profile;
+    }
+
+    // la interfaz (contador de replicas y panel de victoria) va en el prefab HUD: se retoca ahi y no se pierde al regenerar
+    static void Hud()
+    {
+        var hud = (GameObject)PrefabUtility.InstantiatePrefab(AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Prefabs/HUD.prefab"));
+        GameObject panel = hud.GetComponentsInChildren<Transform>(true).First(t => t.name == "Ganaste").gameObject;
+        var door = Object.FindAnyObjectByType<FinalDoor>();
+        SetRef(door, "victoryPanel", panel);
+        SetRef(door, "victoryAnimator", panel.GetComponent<Animator>());
     }
 
     static T AddOverride<T>(VolumeProfile profile) where T : VolumeComponent
