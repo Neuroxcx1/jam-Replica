@@ -144,6 +144,8 @@ public static class PrototypeBuilder
         SetRef(player, "deathEffect", fx.death);
         SetRef(player, "freezeEffect", fx.freeze);
         SetRef(player, "corpseEffect", fx.corpse);
+        SetRef(player, "recallEffect", fx.respawn);
+        SetRef(player, "recallGhost", fx.recallGhost);
 
         var so = new SerializedObject(player);
         so.FindProperty("groundLayer").intValue = 1 << groundLayer;
@@ -163,8 +165,13 @@ public static class PrototypeBuilder
         SetRef(clone, "bodyPrefab", bodyPrefab);
         SetRef(clone, "visual", visual);
         SetRef(clone, "solidifyEffect", fx.solidify);
+        SetRef(clone, "impactEffect", fx.cloneImpact);
+        var speedLines = (GameObject)PrefabUtility.InstantiatePrefab(fx.speedLines, go.transform);
+        SetRef(clone, "speedLines", speedLines.GetComponent<ParticleSystem>());
         go.AddComponent<SpriteFlash>();
-        SetRef(go.AddComponent<Afterimage>(), "source", visual.GetComponent<SpriteRenderer>());
+        var afterimage = go.AddComponent<Afterimage>();
+        SetRef(afterimage, "source", visual.GetComponent<SpriteRenderer>());
+        SetRef(afterimage, "material", fx.afterimageMaterial);
 
         return SavePrefab(go, "Assets/Prefabs/Clone.prefab").GetComponent<Clone>();
     }
@@ -283,11 +290,12 @@ public static class PrototypeBuilder
 
         SetRef(cam.gameObject.AddComponent<CameraFollow>(), "target", target);
 
-        // pixel art de 32 px por unidad: se renderiza a 640x360 y se escala, asi todo (efectos incluidos) sale en pixeles
+        // pixel art de 32 px por unidad: se renderiza a 960x540 (30x17 tiles de mapa) y se escala,
+        // asi todo (efectos incluidos) sale en pixeles. En 1080p escala justo x2
         var pixelPerfect = cam.gameObject.AddComponent<PixelPerfectCamera>();
         pixelPerfect.assetsPPU = 32;
-        pixelPerfect.refResolutionX = 640;
-        pixelPerfect.refResolutionY = 360;
+        pixelPerfect.refResolutionX = 960;
+        pixelPerfect.refResolutionY = 540;
         pixelPerfect.gridSnapping = PixelPerfectCamera.GridSnapping.UpscaleRenderTexture;
         pixelPerfect.cropFrame = PixelPerfectCamera.CropFrame.StretchFill;
     }

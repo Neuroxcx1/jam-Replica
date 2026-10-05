@@ -2,52 +2,77 @@ using UnityEngine;
 
 public class Clone : MonoBehaviour
 {
-    [SerializeField] float speed = 4f;
+    [SerializeField] float speed = 5f;
+    // sale disparado como un golpe y enseguida frena hasta la velocidad de andar
+    [SerializeField] float launchSpeed = 20f;
+    [SerializeField] float launchTime = 0.25f;
     [SerializeField] float lifeTime = 3f;
     [SerializeField] GameObject bodyPrefab;
     [SerializeField] Transform visual;
+
+    [Header("Efectos")]
     [SerializeField] GameObject solidifyEffect;
+    [SerializeField] GameObject impactEffect;
+    [SerializeField] ParticleSystem speedLines;
+    [SerializeField] float impactShake = 3f;
 
     Rigidbody2D rb;
     Collider2D col;
-    Collider2D owner;
+    Player owner;
+    Collider2D ownerCol;
     int direction = 1;
-    float lifeTimer;
+    float age;
     float carry;
     bool hitWall;
     bool dead;
+
+    bool Launching => age < launchTime;
 
     void Awake()
     {
         rb = GetComponent<Rigidbody2D>();
         col = GetComponent<Collider2D>();
-        lifeTimer = lifeTime;
     }
 
-    public void Init(int direction, Collider2D owner)
+    public void Init(int direction, Player owner)
     {
         this.direction = direction;
         this.owner = owner;
+        ownerCol = owner.GetComponent<Collider2D>();
         visual.localScale = new Vector3(direction, 1, 1);
-        Physics2D.IgnoreCollision(col, owner);
+        Physics2D.IgnoreCollision(col, ownerCol);
+
+        if (TryGetComponent(out Afterimage trail)) trail.Boost(launchTime);
+        if (speedLines != null)
+        {
+            var velocity = speedLines.velocityOverLifetime;
+            velocity.x = -direction * 3f;
+        }
     }
 
     void FixedUpdate()
     {
-        lifeTimer -= Time.fixedDeltaTime;
+        age += Time.fixedDeltaTime;
 
         // si el jugador esta dentro de la replica espera a que salga, si no el cuerpo le aparece encima
-        bool playerInside = col.Distance(owner).distance < -0.3f;
-        if ((lifeTimer <= 0 || hitWall) && !playerInside)
+        bool playerInside = col.Distance(ownerCol).distance < -0.3f;
+        if ((age >= lifeTime || hitWall) && !playerInside)
         {
             Die();
             return;
         }
 
-        // solo va hacia delante. Si cae, cae recto para que los cuerpos queden juntos
-        bool falling = rb.linearVelocity.y < -0.1f;
-        rb.linearVelocity = new Vector2((falling ? 0 : direction * speed) + carry, rb.linearVelocity.y);
+        // solo va hacia delante. Si cae (ya andando), cae recto para que los cuerpos queden juntos
+        float run = Mathf.Lerp(launchSpeed, speed, age / launchTime);
+        bool falling = rb.linearVelocity.y < -0.1f && !Launching;
+        rb.linearVelocity = new Vector2((falling ? 0 : direction * run) + carry, rb.linearVelocity.y);
         carry = 0f;
+
+        if (speedLines != null)
+        {
+            var emission = speedLines.emission;
+            emission.enabled = Launching;
+        }
     }
 
     // la cinta transportadora la arrastra
@@ -71,8 +96,15 @@ public class Clone : MonoBehaviour
     {
         if (dead) return;
         dead = true;
-        Instantiate(bodyPrefab, transform.position, Quaternion.identity);
-        if (solidifyEffect != null) Instantiate(solidifyEffect, transform.position, Quaternion.identity);
+
+        GameObject body = Instantiate(bodyPrefab, transform.position, Quaternion.identity);
+        if (owner != null) owner.Replace(gameObject, body);
+
+        // si se estampa contra algo nada mas salir, golpe fuerte
+        bool impact = hitWall && age < launchTime + 0.15f;
+        GameObject effect = impact && impactEffect != null ? impactEffect : solidifyEffect;
+        if (effect != null) Instantiate(effect, transform.position, Quaternion.identity);
+        if (impact) CameraFollow.Shake(impactShake, 0.12f);
         Destroy(gameObject);
     }
 }

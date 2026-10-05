@@ -7,15 +7,21 @@ public class CameraFollow : MonoBehaviour
     [SerializeField] float pixelsPerUnit = 32f;
 
     // mientras el jugador este dentro de esta zona la camara no se mueve
-    [SerializeField] Vector2 deadZone = new Vector2(3f, 2.5f);
-
+    [SerializeField] Vector2 deadZone = new Vector2(1.5f, 3f);
+    // se adelanta hacia donde corres para ver antes lo que viene
+    [SerializeField] float lookAhead = 4f;
+    [SerializeField] float lookAheadSpeed = 8f;
+    // pisando suelo se vuelve a centrar en vertical: asi siempre ves lo que hay debajo
+    [SerializeField] float groundRecenterSpeed = 8f;
     // al reaparecer lejos: rapido al principio y frena al llegar, pero nunca mas lento que esto
     // (tiene que ser mas rapido que el jugador para que siempre lo alcance)
-    [SerializeField] float recenterSpeed = 12f;
+    [SerializeField] float recenterSpeed = 16f;
 
     static CameraFollow current;
 
+    Player player;
     Vector2 focus;
+    float ahead;
     bool recentering;
     float shakePixels;
     float shakeTime;
@@ -36,6 +42,7 @@ public class CameraFollow : MonoBehaviour
     {
         current = this;
         focus = transform.position;
+        if (target != null) player = target.GetComponent<Player>();
     }
 
     // a la rejilla de pixeles, igual que el sprite del jugador (PixelSnap), para que no tiemble en pantalla
@@ -49,7 +56,7 @@ public class CameraFollow : MonoBehaviour
             Vector2 diff = wanted - focus;
 
             // si el jugador aparece lejos (reaparecer en el checkpoint) se centra en el
-            if (Mathf.Abs(diff.x) > deadZone.x * 2f || Mathf.Abs(diff.y) > deadZone.y * 2f) recentering = true;
+            if (Mathf.Abs(diff.x) > deadZone.x * 2f + 1f || Mathf.Abs(diff.y) > deadZone.y * 2f) recentering = true;
 
             if (recentering)
             {
@@ -64,7 +71,14 @@ public class CameraFollow : MonoBehaviour
                 else if (diff.x < -deadZone.x) focus.x = wanted.x + deadZone.x;
                 if (diff.y > deadZone.y) focus.y = wanted.y - deadZone.y;
                 else if (diff.y < -deadZone.y) focus.y = wanted.y + deadZone.y;
+
+                if (player != null && player.IsGrounded())
+                    focus.y = Mathf.MoveTowards(focus.y, wanted.y, groundRecenterSpeed * Time.deltaTime);
             }
+
+            // el adelanto se queda donde estaba cuando te paras, asi la camara no va y viene
+            if (player != null && Mathf.Abs(player.Rb.linearVelocity.x) > 1f)
+                ahead = Mathf.MoveTowards(ahead, Mathf.Sign(player.Rb.linearVelocity.x) * lookAhead, lookAheadSpeed * Time.deltaTime);
         }
 
         // temblor en pixeles enteros. Usa tiempo real para que tambien se note en la pausa al congelarse
@@ -79,6 +93,6 @@ public class CameraFollow : MonoBehaviour
             shake = new Vector2(Mathf.Round(dir.x * pixels), Mathf.Round(dir.y * pixels)) / pixelsPerUnit;
         }
 
-        transform.position = new Vector3(Snap(focus.x) + shake.x, Snap(focus.y) + shake.y, transform.position.z);
+        transform.position = new Vector3(Snap(focus.x + ahead) + shake.x, Snap(focus.y) + shake.y, transform.position.z);
     }
 }

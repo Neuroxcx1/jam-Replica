@@ -4,7 +4,7 @@ using UnityEngine;
 // Efecto para un cuerpo que se queda en el nivel. Sirve para cualquier sprite:
 // le pone un material, lo hace destellar y, si se configura, hace crecer una marca detras
 // (la escarcha), tiembla la camara y congela el juego un instante.
-// Congelarse (R) y morir en pinchos usan este mismo script con distintos valores.
+// Congelarse (Ctrl) y morir usan este mismo script con distintos valores.
 public class BodyEffect : MonoBehaviour
 {
     [SerializeField] Material bodyMaterial;

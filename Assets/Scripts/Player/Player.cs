@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.SceneManagement;
@@ -5,11 +6,18 @@ using UnityEngine.SceneManagement;
 [DefaultExecutionOrder(-10)]
 public class Player : MonoBehaviour
 {
-    public float moveSpeed = 7f;
+    [Header("Movimiento")]
+    public float moveSpeed = 9f;
+    // acelera y frena en vez de cambiar de golpe; en el aire frena menos para conservar el impulso
+    [SerializeField] float groundAcceleration = 90f;
+    [SerializeField] float groundDeceleration = 120f;
+    [SerializeField] float airAcceleration = 70f;
+    [SerializeField] float airDeceleration = 45f;
+    [SerializeField] float gravity = 3.4f;
 
     [Header("Salto")]
-    [SerializeField] float coyoteTime = 0.1f;
-    [SerializeField] float jumpBufferTime = 0.12f;
+    [SerializeField] float coyoteTime = 0.12f;
+    [SerializeField] float jumpBufferTime = 0.15f;
 
     [Header("Suelo")]
     [SerializeField] Transform groundCheck;
@@ -18,7 +26,7 @@ public class Player : MonoBehaviour
 
     [Header("Replica")]
     [SerializeField] int maxReplicas = 6;
-    [SerializeField] float replicateCooldown = 0.3f;
+    [SerializeField] float replicateCooldown = 0.25f;
     [SerializeField] Clone clonePrefab;
     [SerializeField] GameObject bodyPrefab;
     [SerializeField] Transform visual;
@@ -28,15 +36,16 @@ public class Player : MonoBehaviour
     [SerializeField] GameObject deathEffect;
     [SerializeField] BodyEffect freezeEffect;
     [SerializeField] BodyEffect corpseEffect;
-    [SerializeField] float replicateShake = 4f;
-
-    [Header("Reinicio")]
-    [SerializeField] float holdToRestartAll = 1f;
+    [SerializeField] GameObject recallEffect;
+    [SerializeField] RecallGhost recallGhost;
+    [SerializeField] float replicateShake = 5f;
 
     public Rigidbody2D Rb { get; private set; }
     public Vector3 Feet => groundCheck.position;
     public Vector3 Checkpoint => checkpoint;
     public float MoveInput { get; private set; }
+    public float BaseGravity => gravity;
+    public bool JumpHeld => jumpAction.IsPressed();
     public bool JumpReleased => jumpAction.WasReleasedThisFrame();
     public bool IsDead { get; private set; }
     public int ReplicasLeft { get; private set; }
@@ -45,23 +54,29 @@ public class Player : MonoBehaviour
     InputAction moveAction;
     InputAction jumpAction;
     InputAction replicateAction;
-    InputAction dieAction;
+    InputAction freezeAction;
+    InputAction recallAction;
     InputAction restartAction;
+
+    // las replicas que has puesto en esta zona (clones, cuerpos y copias congeladas), de la mas antigua a la mas nueva
+    readonly List<GameObject> placed = new List<GameObject>();
+    readonly Collider2D[] groundHits = new Collider2D[8];
 
     StateMachine stateMachine;
     Collider2D col;
     Vector3 checkpoint;
     int facing = 1;
-    float checkpointTime;
-    float restartHeld;
     float carry;
+    float lastCarry;
     float coyoteTimer;
     float jumpBufferTimer;
+    float jumpLockTimer;
     float replicateTimer;
 
     void Awake()
     {
         Rb = GetComponent<Rigidbody2D>();
+        Rb.gravityScale = gravity;
         col = GetComponent<Collider2D>();
         stateMachine = GetComponentInChildren<StateMachine>();
         checkpoint = transform.position;
@@ -71,27 +86,17 @@ public class Player : MonoBehaviour
         moveAction = InputSystem.actions.FindAction("Move");
         jumpAction = InputSystem.actions.FindAction("Jump");
         replicateAction = InputSystem.actions.FindAction("Replicate");
-        dieAction = InputSystem.actions.FindAction("Die");
+        freezeAction = InputSystem.actions.FindAction("Freeze");
+        recallAction = InputSystem.actions.FindAction("Recall");
         restartAction = InputSystem.actions.FindAction("Restart");
     }
 
     void Update()
     {
-        // T: vuelve al principio de la zona y quita los cuerpos que has dejado en ella (por si alguno tapa el camino).
-        // Mantenida un segundo reinicia el nivel entero
-        if (restartAction.IsPressed())
+        // K: reinicia el nivel entero
+        if (restartAction.WasPressedThisFrame())
         {
-            restartHeld += Time.unscaledDeltaTime;
-            if (restartHeld >= holdToRestartAll)
-            {
-                SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
-                return;
-            }
-        }
-        else if (restartHeld > 0f)
-        {
-            restartHeld = 0f;
-            RestartZone();
+            SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
             return;
         }
 
@@ -104,23 +109,33 @@ public class Player : MonoBehaviour
             visual.localScale = new Vector3(facing, 1, 1);
         }
 
-        // coyote time: un momento de gracia para saltar despues de dejar el suelo
-        if (IsGrounded() && Rb.linearVelocity.y <= 0.01f) coyoteTimer = coyoteTime;
+        // coyote time: un momento de gracia para saltar despues de dejar el suelo.
+        // No se mira si subes (en el montacargas o la prensa subes sin saltar): solo se ignora el suelo justo al saltar
+        jumpLockTimer -= Time.deltaTime;
+        if (IsGrounded() && jumpLockTimer <= 0) coyoteTimer = coyoteTime;
         else coyoteTimer -= Time.deltaTime;
 
         // buffer: guarda el salto aunque lo pulses un poco antes de tocar el suelo
         if (jumpAction.WasPressedThisFrame()) jumpBufferTimer = jumpBufferTime;
         else jumpBufferTimer -= Time.deltaTime;
 
-        // espera entre replicas para que no salgan una encima de otra
+        // Shift: lanza un clon. Ctrl: deja una copia congelada. Q: recupera la replica mas antigua
         replicateTimer -= Time.deltaTime;
         if (replicateAction.WasPressedThisFrame() && replicateTimer <= 0 && ReplicasLeft > 0) Replicate();
-        if (dieAction.WasPressedThisFrame()) Die(frozen: true);
+        if (freezeAction.WasPressedThisFrame() && ReplicasLeft > 0) Freeze();
+        if (recallAction.WasPressedThisFrame()) Recall();
     }
 
     public bool IsGrounded()
     {
-        return Physics2D.OverlapBox(groundCheck.position, groundCheckSize, 0f, groundLayer);
+        var filter = new ContactFilter2D();
+        filter.SetLayerMask(groundLayer);
+        int count = Physics2D.OverlapBox(groundCheck.position, groundCheckSize, 0f, filter, groundHits);
+
+        // la copia congelada que estas atravesando no cuenta como suelo
+        for (int i = 0; i < count; i++)
+            if (!Physics2D.GetIgnoreCollision(col, groundHits[i])) return true;
+        return false;
     }
 
     public bool CanJump() => jumpBufferTimer > 0 && coyoteTimer > 0;
@@ -129,11 +144,20 @@ public class Player : MonoBehaviour
     {
         jumpBufferTimer = 0;
         coyoteTimer = 0;
+        jumpLockTimer = 0.1f;
     }
 
     public void Move(float direction)
     {
-        Rb.linearVelocity = new Vector2(direction * moveSpeed + carry, Rb.linearVelocity.y);
+        bool grounded = IsGrounded();
+        float rate = direction != 0
+            ? (grounded ? groundAcceleration : airAcceleration)
+            : (grounded ? groundDeceleration : airDeceleration);
+
+        // se parte de la velocidad real (si chocas con una pared ya es 0) sin lo que puso la cinta
+        float run = Mathf.MoveTowards(Rb.linearVelocity.x - lastCarry, direction * moveSpeed, rate * Time.fixedDeltaTime);
+        Rb.linearVelocity = new Vector2(run + carry, Rb.linearVelocity.y);
+        lastCarry = carry;
         carry = 0f;
     }
 
@@ -145,30 +169,59 @@ public class Player : MonoBehaviour
         replicateTimer = replicateCooldown;
         ReplicasLeft--;
         Clone clone = Instantiate(clonePrefab, transform.position, Quaternion.identity);
-        clone.Init(facing, col);
+        clone.Init(facing, this);
+        placed.Add(clone.gameObject);
 
         if (splitEffect != null)
-            Instantiate(splitEffect, transform.position, Quaternion.identity).Init(transform, clone.transform);
+            Instantiate(splitEffect, transform.position, Quaternion.identity).Init(transform, clone.transform, facing);
         CameraFollow.Shake(replicateShake, 0.15f);
     }
 
-    // frozen = true con la R: el cuerpo se congela donde estas, aunque sea en el aire.
-    // Al morir por otra cosa (pinchos) el cuerpo se queda pero no se congela.
-    public void Die(bool frozen = false)
+    // deja una copia congelada donde estas y tu sigues: la atraviesas y caes (o te subes encima si ibas hacia arriba)
+    void Freeze()
+    {
+        ReplicasLeft--;
+        GameObject body = Instantiate(bodyPrefab, transform.position, Quaternion.identity);
+        body.GetComponent<Rigidbody2D>().bodyType = RigidbodyType2D.Static;
+        body.GetComponent<Body>().IgnoreUntilApart(col);
+        if (freezeEffect != null) Instantiate(freezeEffect, transform.position, Quaternion.identity).Attach(body);
+        placed.Add(body);
+    }
+
+    // te devuelve la replica mas antigua que pusiste, en el mismo orden en que las pusiste
+    void Recall()
+    {
+        // las que ya no existen (por ejemplo, compactadas por la prensa) no cuentan
+        placed.RemoveAll(piece => piece == null);
+        if (placed.Count == 0) return;
+
+        GameObject oldest = placed[0];
+        placed.RemoveAt(0);
+        if (recallEffect != null) Instantiate(recallEffect, oldest.transform.position, Quaternion.identity);
+        if (recallGhost != null) Instantiate(recallGhost).Fly(oldest.GetComponentInChildren<SpriteRenderer>(), transform);
+        Destroy(oldest);
+        ReplicasLeft = Mathf.Min(maxReplicas, ReplicasLeft + 1);
+    }
+
+    // cuando un clon se convierte en cuerpo, el cuerpo ocupa su sitio en la cola
+    public void Replace(GameObject oldPiece, GameObject newPiece)
+    {
+        int index = placed.IndexOf(oldPiece);
+        if (index >= 0) placed[index] = newPiece;
+    }
+
+    // al morir (laser, torreta, prensa...) dejas tu cuerpo si te quedan replicas y vuelves al checkpoint
+    public void Die()
     {
         if (IsDead) return;
 
         if (deathEffect != null) Instantiate(deathEffect, transform.position, Quaternion.identity);
-
-        // morir tambien gasta una replica. Sin replicas vuelves al checkpoint pero no dejas cuerpo
         if (ReplicasLeft > 0)
         {
             ReplicasLeft--;
             GameObject body = Instantiate(bodyPrefab, transform.position, Quaternion.identity);
-            if (frozen) body.GetComponent<Rigidbody2D>().bodyType = RigidbodyType2D.Static;
-
-            BodyEffect effect = frozen ? freezeEffect : corpseEffect;
-            if (effect != null) Instantiate(effect, transform.position, Quaternion.identity).Attach(body);
+            if (corpseEffect != null) Instantiate(corpseEffect, transform.position, Quaternion.identity).Attach(body);
+            placed.Add(body);
         }
         stateMachine.ChangeState("dead");
     }
@@ -190,24 +243,12 @@ public class Player : MonoBehaviour
 
     public void SetCheckpoint(Vector3 position)
     {
-        // solo un checkpoint nuevo recarga las replicas, reaparecer en el mismo no
+        // solo un checkpoint nuevo recarga las replicas, reaparecer en el mismo no.
+        // Lo que dejaste en la zona anterior se queda ahi para siempre
         if (position == checkpoint) return;
         checkpoint = position;
-        checkpointTime = Time.time;
         ReplicasLeft = maxReplicas;
-    }
-
-    void RestartZone()
-    {
-        // de atras hacia delante: al destruir un cuerpo se quita el solo de la lista
-        for (int i = Body.All.Count - 1; i >= 0; i--)
-            if (Body.All[i].CreatedAt >= checkpointTime) Destroy(Body.All[i].gameObject);
-        foreach (Clone clone in FindObjectsByType<Clone>())
-            Destroy(clone.gameObject);
-
-        ReplicasLeft = maxReplicas;
-        Respawn();
-        stateMachine.ChangeState("idle");
+        placed.Clear();
     }
 
     void OnDrawGizmosSelected()
