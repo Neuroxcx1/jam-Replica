@@ -22,8 +22,8 @@ MonoBehaviour:
     m_UnitsPerEM: 0
     m_LineHeight: 10
     m_AscentLine: 7
-    m_CapLine: 0
-    m_MeanLine: 0
+    m_CapLine: 7
+    m_MeanLine: 7
     m_Baseline: 0
     m_DescentLine: -3
     m_SuperscriptOffset: 7
@@ -32,7 +32,7 @@ MonoBehaviour:
     m_SubscriptSize: 0.5
     m_UnderlineOffset: -1
     m_UnderlineThickness: 1
-    m_StrikethroughOffset: 0
+    m_StrikethroughOffset: 2.8
     m_StrikethroughThickness: 0
     m_TabWidth: 4
   m_Material: {fileID: 5192293977591498944}
@@ -1973,7 +1973,7 @@ Material:
     m_Floats:
     - _ColorMask: 15
     - _CullMode: 0
-    - _DiffusePower: 1
+    - _DiffusePower: 4
     - _MaskSoftnessX: 0
     - _MaskSoftnessY: 0
     - _Stencil: 0
@@ -1985,6 +1985,6 @@ Material:
     - _VertexOffsetY: 0
     m_Colors:
     - _ClipRect: {r: -32767, g: -32767, b: 32767, a: 32767}
-    - _Color: {r: 1, g: 1, b: 1, a: 1}
+    - _Color: {r: 0.24705884, g: 0.7490196, b: 0.44705886, a: 1}
   m_BuildTextureStacks: []
   m_AllowLocking: 1
