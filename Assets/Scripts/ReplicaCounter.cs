@@ -1,14 +1,17 @@
 using UnityEngine;
 using UnityEngine.UI;
+using TMPro; // esta es la libreria nueva
 
 public class ReplicaCounter : MonoBehaviour
 {
     Player player;
-    Text label;
+    [SerializeField] TextMeshProUGUI label; //esto es nuevo
+    //Text label;
     int shown = -1;
 
     // se crea solo al darle Play, no hace falta ponerlo en la escena
-    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
+    //[RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
+
     static void Create()
     {
         if (FindAnyObjectByType<Player>() == null) return;
@@ -20,7 +23,7 @@ public class ReplicaCounter : MonoBehaviour
         // sobrevive al reinicio con T
         DontDestroyOnLoad(gameObject);
 
-        var canvas = gameObject.AddComponent<Canvas>();
+        /*var canvas = gameObject.AddComponent<Canvas>();
         canvas.renderMode = RenderMode.ScreenSpaceOverlay;
         var scaler = gameObject.AddComponent<CanvasScaler>();
         scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
@@ -36,6 +39,7 @@ public class ReplicaCounter : MonoBehaviour
         rect.anchorMin = rect.anchorMax = rect.pivot = new Vector2(0, 1);
         rect.anchoredPosition = new Vector2(30, -20);
         rect.sizeDelta = new Vector2(500, 60);
+        */
     }
 
     void Update()
@@ -51,6 +55,6 @@ public class ReplicaCounter : MonoBehaviour
         // solo cambia el texto cuando cambia el numero
         if (player.ReplicasLeft == shown) return;
         shown = player.ReplicasLeft;
-        label.text = $"Réplicas: {shown}/{player.MaxReplicas}";
+        label.text = $"{shown:0} / {player.MaxReplicas}";
     }
 }
