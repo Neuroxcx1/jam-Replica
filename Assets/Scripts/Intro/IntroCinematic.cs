@@ -34,6 +34,8 @@ public class IntroCinematic : MonoBehaviour
     [SerializeField] AudioSource[] voices;
     // el zumbido de la corriente de emergencia, ya jugando
     [SerializeField] AudioSource emergencyAmbience;
+    // los fluorescentes al volver la corriente (Luces): las luces se encienden con sus chasquidos
+    [SerializeField] AudioSource powerOnSound;
     [SerializeField] SoundMix quakeSound;
 
     [Header("Planos (zoom: veces mas cerca que al jugar)")]
@@ -163,12 +165,16 @@ public class IntroCinematic : MonoBehaviour
 
         // vuelve la corriente de emergencia
         yield return new WaitForSeconds(powerBackDelay);
-        for (int i = 0; i < 4; i++)
+        if (powerOnSound != null && powerOnSound.clip != null) yield return LightFlicker.SwitchOn(powerOnSound, SetPower);
+        else
         {
-            SetPower(i % 2 == 1);
-            yield return new WaitForSeconds(0.08f);
+            for (int i = 0; i < 4; i++)
+            {
+                SetPower(i % 2 == 1);
+                yield return new WaitForSeconds(0.08f);
+            }
+            SetPower(true);
         }
-        SetPower(true);
         yield return FadeSound(emergencyAmbience, emergencyVolume, 1.5f);
     }
 

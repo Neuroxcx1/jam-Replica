@@ -261,14 +261,14 @@ public static partial class LabBuilder
         return mix;
     }
 
-    static AudioSource Loop(Transform parent, string name, string clip, float volume, bool playNow)
+    static AudioSource Loop(Transform parent, string name, string clip, float volume, bool playNow, bool loop = true)
     {
         var go = new GameObject(name);
         go.transform.SetParent(parent, false);
         var source = go.AddComponent<AudioSource>();
         source.clip = Clip(clip);
         source.outputAudioMixerGroup = MixerGroup("Efectos");
-        source.loop = true;
+        source.loop = loop;
         source.volume = volume;
         source.playOnAwake = playNow;
         return source;
@@ -313,9 +313,11 @@ public static partial class LabBuilder
         if (old != null) Object.DestroyImmediate(old.gameObject);
         var room = new GameObject("Sonido de la sala").transform;
         room.SetParent(intro.transform, false);
-        SetRef(intro, "ambience", Loop(room, "Ambiente", "Sonido ambiente 2 (bucle)", 0.25f, true));
+        // el ambiente bajito: la musica tiene que quedar por encima
+        SetRef(intro, "ambience", Loop(room, "Ambiente", "Sonido ambiente 2 (bucle)", 0.12f, true));
         SetArray(intro, "voices", new[] { Loop(room, "Voces", "Voces (bucle)", 1f, true), Loop(room, "Voces 2", "Voces 2 (bucle)", 1f, true) });
-        SetRef(intro, "emergencyAmbience", Loop(room, "Corriente de emergencia", "Sonido ambiente 1 (bucle)", 0.7f, false));
+        SetRef(intro, "emergencyAmbience", Loop(room, "Corriente de emergencia", "Sonido ambiente 1 (bucle)", 0.35f, false));
+        SetRef(intro, "powerOnSound", Loop(room, "Luces al volver la corriente", "Luces", 1f, false, false));
         SetRef(intro, "quakeSound", quake);
 
         var window = Object.FindAnyObjectByType<ObservationWindow>(FindObjectsInactive.Include);
@@ -345,5 +347,29 @@ public static partial class LabBuilder
 
         UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(intro.gameObject.scene);
         Debug.Log("Sonidos de la intro puestos");
+    }
+
+    // el fluorescente (Prefabs/Nivel/Fluorescente) suena al titilar, con el tubo encendiendose en cada chasquido.
+    // Solo se oyen los que estan cerca de la camara, para que no suenen todos a la vez
+    [MenuItem("Replica/Poner sonido a los fluorescentes")]
+    static void AddLightSounds()
+    {
+        const string path = "Assets/Prefabs/Nivel/Fluorescente.prefab";
+        GameObject lamp = PrefabUtility.LoadPrefabContents(path);
+        var flicker = lamp.GetComponentInChildren<LightFlicker>(true);
+        var sound = flicker.GetComponent<AudioSource>();
+        if (sound == null) sound = flicker.gameObject.AddComponent<AudioSource>();
+        sound.clip = Clip("Luces");
+        sound.outputAudioMixerGroup = MixerGroup("Efectos");
+        sound.playOnAwake = false;
+        sound.spatialBlend = 1f;
+        sound.rolloffMode = AudioRolloffMode.Linear;
+        // la camara esta 10 por delante: entera hasta 10 de distancia y nada a partir de 20
+        sound.minDistance = 10f;
+        sound.maxDistance = 20f;
+        SetRef(flicker, "sound", sound);
+        PrefabUtility.SaveAsPrefabAsset(lamp, path);
+        PrefabUtility.UnloadPrefabContents(lamp);
+        Debug.Log("Sonido puesto en " + path);
     }
 }
