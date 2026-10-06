@@ -69,11 +69,11 @@ public static class EffectsBuilder
             cloneMaterial = ReplicaMaterial("Replica_Clone", replica, DeepRed, Skin, White, Red,
                 scan: 0.3f, shine: 0f, flicker: 0.12f, opacity: 0.85f),
             bodyMaterial = ReplicaMaterial("Replica_Body", replicaLit, new Color(0.35f, 0.12f, 0.12f), new Color(0.78f, 0.55f, 0.48f),
-                new Color(0.95f, 0.85f, 0.8f), new Color(0.42f, 0.12f, 0.12f), scan: 0f, shine: 0f, flicker: 0f, opacity: 1f),
+                new Color(0.95f, 0.85f, 0.8f), new Color(0.42f, 0.12f, 0.12f), scan: 0f, shine: 0f, flicker: 0f, opacity: 1f, ownColors: true),
             afterimageMaterial = AssetDatabase.LoadAssetAtPath<Material>("Packages/com.unity.render-pipelines.universal/Runtime/Materials/Sprite-Unlit-Default.mat")
         };
         Material frozen = ReplicaMaterial("Replica_Frozen", replicaLit, new Color(0.18f, 0.38f, 0.7f), new Color(0.55f, 0.82f, 0.97f),
-            new Color(0.92f, 0.99f, 1f), new Color(0.97f, 1f, 1f), scan: 0f, shine: 0.8f, flicker: 0f, opacity: 1f);
+            new Color(0.92f, 0.99f, 1f), new Color(0.97f, 1f, 1f), scan: 0f, shine: 0.8f, flicker: 0f, opacity: 1f, ownColors: true);
         Material dead = ReplicaMaterial("Replica_Dead", replicaLit, new Color(0.25f, 0.18f, 0.2f), new Color(0.62f, 0.52f, 0.5f),
             new Color(0.86f, 0.79f, 0.76f), new Color(0.35f, 0.1f, 0.12f), scan: 0f, shine: 0f, flicker: 0f, opacity: 1f);
 
@@ -100,17 +100,18 @@ public static class EffectsBuilder
         return set;
     }
 
+    // ownColors: deja los colores del sprite (sin pasarlos a la paleta ni el borde); el destello y el brillo siguen
     static Material ReplicaMaterial(string name, Shader shader, Color dark, Color mid, Color light, Color edge,
-        float scan, float shine, float flicker, float opacity)
+        float scan, float shine, float flicker, float opacity, bool ownColors = false)
     {
         Material m = SaveMaterial(name, shader, null);
         m.SetColor("_ColorDark", dark);
         m.SetColor("_ColorMid", mid);
         m.SetColor("_ColorLight", light);
-        m.SetFloat("_RampAmount", 1f);
+        m.SetFloat("_RampAmount", ownColors ? 0f : 1f);
         m.SetFloat("_RampSteps", 4f);
         m.SetColor("_EdgeColor", edge);
-        m.SetFloat("_EdgeAmount", 1f);
+        m.SetFloat("_EdgeAmount", ownColors ? 0f : 1f);
         m.SetColor("_ScanColor", Red);
         m.SetFloat("_ScanAmount", scan);
         m.SetFloat("_ScanSpeed", 12f);

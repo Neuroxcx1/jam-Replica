@@ -176,19 +176,20 @@ public class Player : MonoBehaviour
         CameraFollow.Shake(replicateShake, 0.15f);
     }
 
-    // deja una copia congelada donde estas y te subes encima de ella.
+    // deja una copia congelada (el cubo) donde tienes los pies y te subes encima de ella.
     // Si no cabes encima (techo justo arriba), la atraviesas y caes
     void Freeze()
     {
         // la posicion de la fisica: la del sprite va un poco por detras (interpolacion) y al caer rapido se nota
-        Vector2 at = Rb.position;
+        float half = bodyPrefab.GetComponent<BoxCollider2D>().size.y / 2f;
+        Vector2 at = Rb.position + Vector2.down * (col.bounds.extents.y - half);
         ReplicasLeft--;
         GameObject body = Instantiate(bodyPrefab, at, Quaternion.identity);
         body.GetComponent<Rigidbody2D>().bodyType = RigidbodyType2D.Static;
         if (freezeEffect != null) Instantiate(freezeEffect, at, Quaternion.identity).Attach(body);
         placed.Add(body);
 
-        Vector2 top = at + Vector2.up * (body.GetComponent<BoxCollider2D>().size.y + 0.02f);
+        Vector2 top = at + Vector2.up * (half + col.bounds.extents.y + 0.02f);
         if (Physics2D.OverlapBox(top, col.bounds.size * 0.95f, 0f, groundLayer) == null)
         {
             Rb.position = top;
@@ -234,6 +235,12 @@ public class Player : MonoBehaviour
 
         if (deathEffect != null) Instantiate(deathEffect, transform.position, Quaternion.identity);
         stateMachine.ChangeState("dead");
+    }
+
+    // la animacion del sprite (la piden los estados al entrar)
+    public void Animate(Sprite[] frames, float fps, bool loop)
+    {
+        if (frames != null && frames.Length > 0) visual.GetComponent<SpriteLoop>().Play(frames, loop, fps);
     }
 
     public void SetAlive(bool alive)

@@ -2,12 +2,13 @@ using System.Collections;
 using UnityEngine;
 
 // Efecto para un cuerpo que se queda en el nivel. Sirve para cualquier sprite:
-// le pone un material, lo hace destellar y, si se configura, hace crecer una marca detras
+// le pone un material (y si se configura otra animacion), lo hace destellar, hace crecer una marca detras
 // (la escarcha), tiembla la camara y congela el juego un instante.
 // Congelarse (Ctrl) y morir usan este mismo script con distintos valores.
 public class BodyEffect : MonoBehaviour
 {
     [SerializeField] Material bodyMaterial;
+    [SerializeField] Sprite[] bodyFrames;
     [SerializeField] SpriteRenderer decal;
     [SerializeField] float decalGrowTime = 0.3f;
     [SerializeField] float flashTime = 0.15f;
@@ -33,6 +34,8 @@ public class BodyEffect : MonoBehaviour
         bodyRenderers = body.GetComponentsInChildren<SpriteRenderer>();
         if (bodyMaterial != null)
             foreach (SpriteRenderer sr in bodyRenderers) sr.sharedMaterial = bodyMaterial;
+        if (bodyFrames != null && bodyFrames.Length > 0 && body.GetComponentInChildren<SpriteLoop>() is SpriteLoop animation)
+            animation.Play(bodyFrames, false);
 
         // se queda con el cuerpo (y desaparece con el al reiniciar)
         transform.SetParent(body.transform, true);

@@ -5,10 +5,14 @@ using UnityEngine;
 // Solo quema donde ya ha llegado el vapor: el chorro avanza desde la boca y al cerrarse se aleja.
 public class SteamVent : MonoBehaviour
 {
+    [Tooltip("Hasta donde llega como mucho; si antes hay una pared o algo solido, se corta ahi")]
     [SerializeField] float length = 4f;
     [SerializeField] float width = 0.7f;
+    [Tooltip("Segundos echando vapor")]
     [SerializeField] float onTime = 1f;
+    [Tooltip("Segundos parado")]
     [SerializeField] float offTime = 2f;
+    [Tooltip("Retraso: con varios seguidos, ponles retrasos distintos para que no salgan a la vez")]
     [SerializeField] float startDelay;
     [SerializeField] float jetSpeed = 8f;
     // antes de salir suelta unos soplidos de aviso

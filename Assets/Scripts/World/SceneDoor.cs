@@ -2,8 +2,8 @@ using System.Collections;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
-// Paso a otra escena (de la sala del tanque al laboratorio): al cruzar se funde a negro, carga la escena
-// y vuelve a aclararse al otro lado. Necesita un collider trigger.
+// Paso a otra escena (de la sala del tanque al tutorial): al cruzar se funde a negro, carga la escena
+// y vuelve a aclararse al otro lado. Necesita un collider trigger. La puerta final lo usa con SceneDoor.Go.
 public class SceneDoor : MonoBehaviour
 {
     [SerializeField] string scene = "Laboratorio";
@@ -17,10 +17,18 @@ public class SceneDoor : MonoBehaviour
         if (crossing || !other.TryGetComponent(out Player _)) return;
         crossing = true;
         GetComponent<Collider2D>().enabled = false;
-        // sobrevive al cambio de escena para aclarar la pantalla al otro lado
-        transform.SetParent(null);
-        DontDestroyOnLoad(gameObject);
-        StartCoroutine(Cross());
+        Go(scene, fadeTime);
+    }
+
+    public static void Go(string scene, float fadeTime = 0.7f)
+    {
+        // un objeto aparte que sobrevive al cambio de escena para aclarar la pantalla al otro lado
+        var fader = new GameObject("Cambio de escena").AddComponent<SceneDoor>();
+        fader.scene = scene;
+        fader.fadeTime = fadeTime;
+        fader.crossing = true;
+        DontDestroyOnLoad(fader.gameObject);
+        fader.StartCoroutine(fader.Cross());
     }
 
     IEnumerator Cross()

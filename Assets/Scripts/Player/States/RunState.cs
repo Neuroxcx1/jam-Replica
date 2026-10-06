@@ -6,6 +6,7 @@ public class RunState : PlayerState
 
     public override void Enter()
     {
+        PlayAnimation();
         if (walkDust != null) walkDust.Play();
     }
 

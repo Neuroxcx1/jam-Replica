@@ -11,6 +11,9 @@ using UnityEngine.Rendering.Universal;
 public class IntroCinematic : MonoBehaviour
 {
     [SerializeField] Player player;
+    // en el tanque esta acurrucado y al salir se despliega: la animacion de hacerse cubo al reves
+    [SerializeField] Sprite[] wakeUp;
+    [SerializeField] float wakeUpFps = 8f;
     [SerializeField] SpecimenTank tank;
     [SerializeField] ObservationWindow window;
     [SerializeField] Scientist[] scientists;
@@ -68,10 +71,13 @@ public class IntroCinematic : MonoBehaviour
             return;
         }
 
-        // el menu: la sala ya se ve detras, con el especimen flotando en el tanque, y no se puede mover
+        // el menu: la sala ya se ve detras, con el especimen acurrucado flotando en el tanque, y no se puede mover.
+        // Sus estados (y sus animaciones) esperan a que salga
         floating = true;
         player.enabled = false;
         player.Rb.simulated = false;
+        player.GetComponentInChildren<StateMachine>().enabled = false;
+        player.Animate(new[] { wakeUp[0] }, 1f, true);
         floatPosition = player.transform.position + Vector3.up * floatHeight;
 
         // el Pixel Perfect Camera solo sabe acercar a saltos: durante la cinematica el zoom va con la camara normal
@@ -174,8 +180,28 @@ public class IntroCinematic : MonoBehaviour
 
         player.Rb.simulated = true;
         player.enabled = true;
-        // sale del tanque de un salto
-        if (!quiet) player.Rb.linearVelocity = new Vector2(2.5f, 7f);
+        if (quiet) Stand();
+        else
+        {
+            // sale del tanque de un salto mientras se despliega
+            player.Rb.linearVelocity = new Vector2(2.5f, 7f);
+            StartCoroutine(WakeUp());
+        }
+    }
+
+    IEnumerator WakeUp()
+    {
+        player.Animate(wakeUp, wakeUpFps, false);
+        yield return new WaitForSeconds(wakeUp.Length / wakeUpFps);
+        Stand();
+    }
+
+    // vuelven sus estados: el que toque (de pie, cayendo...) pone su animacion
+    void Stand()
+    {
+        var states = player.GetComponentInChildren<StateMachine>();
+        states.enabled = true;
+        states.ChangeState("idle");
     }
 
     // el marco y la pared crecen cada vez mas rapido hasta salirse de la vista (parece que la camara pasa por la

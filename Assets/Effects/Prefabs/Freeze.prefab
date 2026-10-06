@@ -9871,6 +9871,12 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BodyEffect
   bodyMaterial: {fileID: 2100000, guid: 72eb328abf7dfac488c32d336274f435, type: 2}
+  bodyFrames:
+  - {fileID: 2790278276293229796, guid: 629ef84e99e80ad4ba9b49a2e4806d5d, type: 3}
+  - {fileID: 622710299305389945, guid: 629ef84e99e80ad4ba9b49a2e4806d5d, type: 3}
+  - {fileID: -2141016826755913854, guid: 629ef84e99e80ad4ba9b49a2e4806d5d, type: 3}
+  - {fileID: 5664932161068844375, guid: 629ef84e99e80ad4ba9b49a2e4806d5d, type: 3}
+  - {fileID: 6595374777043968062, guid: 629ef84e99e80ad4ba9b49a2e4806d5d, type: 3}
   decal: {fileID: 828299377872720044}
   decalGrowTime: 0.3
   flashTime: 0.15

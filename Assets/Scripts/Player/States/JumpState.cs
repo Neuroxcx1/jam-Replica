@@ -12,6 +12,7 @@ public class JumpState : PlayerState
 
     public override void Enter()
     {
+        PlayAnimation();
         // temblor leve en todos los saltos; el polvo solo si sales del suelo (no en el de coyote)
         CameraFollow.Shake(shakePixels, 0.1f);
         if (jumpDust != null && player.IsGrounded())
