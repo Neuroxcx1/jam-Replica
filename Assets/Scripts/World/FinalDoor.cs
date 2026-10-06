@@ -2,10 +2,9 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.SceneManagement;
 
-// Salida del laboratorio. No hay puntuacion: al cruzarla todo se funde a negro y ya.
+// Salida del laboratorio. No hay puntuacion: al cruzarla se para el jugador y sale el panel de victoria.
 public class FinalDoor : MonoBehaviour
 {
-
     [Header("Victory UI")]
     [SerializeField] GameObject victoryPanel;
     [SerializeField] Animator victoryAnimator;
@@ -36,7 +35,6 @@ public class FinalDoor : MonoBehaviour
 
         // Reproducir la animacion de apertura
         victoryAnimator.SetTrigger("Open");
-
     }
 
     void Update()
@@ -44,14 +42,14 @@ public class FinalDoor : MonoBehaviour
         if (!completed)
             return;
 
-        if (Keyboard.current.tKey.wasPressedThisFrame)
+        // Reiniciar el nivel al pulsar la acción Restart.
+        var restart = InputSystem.actions.FindAction("Restart");
+
+        if (restart != null && restart.WasPressedThisFrame())
         {
-            Debug.Log("T DETECTADA");
-            
             SceneManager.LoadScene(
                 SceneManager.GetActiveScene().buildIndex
             );
         }
     }
-
 }

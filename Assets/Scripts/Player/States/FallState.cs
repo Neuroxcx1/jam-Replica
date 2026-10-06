@@ -2,24 +2,24 @@ using UnityEngine;
 
 public class FallState : PlayerState
 {
-    [SerializeField] float gravityMultiplier = 1.7f;
-    [SerializeField] float maxFallSpeed = 20f;
+    [SerializeField] float gravityMultiplier = 1.8f;
+    [SerializeField] float maxFallSpeed = 22f;
+    // justo despues del punto mas alto (con el salto pulsado) cae mas despacio, igual que en JumpState
+    [SerializeField] float apexSpeed = 2f;
+    [SerializeField] float apexGravity = 0.5f;
     [SerializeField] GameObject landDust;
     [SerializeField] float landDustSpeed = 6f;
 
-    float normalGravity;
     float fastestFall;
 
     public override void Enter()
     {
-        normalGravity = player.Rb.gravityScale;
-        player.Rb.gravityScale = normalGravity * gravityMultiplier;
         fastestFall = 0f;
     }
 
     public override void Exit()
     {
-        player.Rb.gravityScale = normalGravity;
+        player.Rb.gravityScale = player.BaseGravity;
     }
 
     public override void UpdateState(float delta)
@@ -38,9 +38,14 @@ public class FallState : PlayerState
     public override void PhysicsUpdate(float delta)
     {
         player.Move(player.MoveInput);
-        fastestFall = Mathf.Min(fastestFall, player.Rb.linearVelocity.y);
 
-        if (player.Rb.linearVelocity.y < -maxFallSpeed)
+        // cae mas rapido de lo que sube: el salto se siente con peso y no flota
+        float vy = player.Rb.linearVelocity.y;
+        bool apex = player.JumpHeld && vy > -apexSpeed;
+        player.Rb.gravityScale = player.BaseGravity * (apex ? apexGravity : gravityMultiplier);
+
+        fastestFall = Mathf.Min(fastestFall, vy);
+        if (vy < -maxFallSpeed)
             player.Rb.linearVelocity = new Vector2(player.Rb.linearVelocity.x, -maxFallSpeed);
     }
 }

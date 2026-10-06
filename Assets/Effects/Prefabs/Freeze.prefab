@@ -9874,9 +9874,9 @@ MonoBehaviour:
   decal: {fileID: 828299377872720044}
   decalGrowTime: 0.3
   flashTime: 0.15
-  shakePixels: 8
+  shakePixels: 5
   shakeTime: 0.35
-  hitStop: 0.08
+  hitStop: 0.04
 --- !u!1 &8263419786690911096
 GameObject:
   m_ObjectHideFlags: 0

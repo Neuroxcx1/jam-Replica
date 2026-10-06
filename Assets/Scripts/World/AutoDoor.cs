@@ -8,7 +8,8 @@ public class AutoDoor : MonoBehaviour
     [SerializeField] Collider2D blocker;
     [SerializeField] Vector2 sensorSize = new Vector2(5f, 3f);
     [SerializeField] float height = 3f;
-    [SerializeField] float speed = 8f;
+    // rapida: si no, una replica que sale disparada se estampa contra ella antes de que se abra
+    [SerializeField] float speed = 24f;
 
     float open;
 

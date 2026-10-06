@@ -52,6 +52,20 @@ public static class LabAssets
         public Sprite tankWall;
         public Sprite tankRim;
         public Sprite tankBack;
+
+        public Sprite controlsSign;
+        public Sprite moveSign;
+        public Sprite replicaSample;              // muestra de mutageno: una replica mas
+
+        // cinematica del principio
+        public Sprite specimenTank;
+        public Sprite specimenLiquid;
+        public Sprite[] specimenGlass;            // entero, rajado y roto
+        public Sprite[][] scientists;             // cada cientifico: quieto y 4 pasos
+        public Sprite[][] foregroundScientists;   // los que pasan por delante de la camara: quieto y 2 pasos
+        public Sprite windowFrame;                // ventana de la sala de observacion: marco, pared y cristal
+        public Sprite windowWall;
+        public Sprite[] windowGlass;              // entero, rajado y roto
     }
 
     // colores sacados del tileset
@@ -85,6 +99,9 @@ public static class LabAssets
         SliceProps(set);
         CreateLampSprites(set);
         CreateMachineSprites(set);
+        CreateSigns(set);
+        CreateReplicaSample(set);
+        CreateIntroSprites(set);
 
         AssetDatabase.SaveAssets();
         return set;
@@ -477,6 +494,410 @@ public static class LabAssets
         Paint(back, 0, 16, 32, 1, Dark);
         for (int x = 4; x < 32; x += 12) back.SetPixel(x, 8, Mid2);
         set.tankBack = SaveSprite(back, "Tanque_Fondo", new Vector2(0.5f, 0.5f));
+    }
+
+    // carteles de papel pegados con cinta en la pared: cabecera roja y una fila por control (las teclas dibujadas como teclas)
+    static void CreateSigns(Set set)
+    {
+        set.controlsSign = PaperSign("Cartel_Controles", "CONTROLES", new[]
+        {
+            ("A D", "MOVERSE"),
+            ("ESPACIO W", "SALTAR"),
+            ("SHIFT", "LANZAR CLON"),
+            ("CTRL", "CLON CONGELADO"),
+            ("Q", "RECUPERAR CLON"),
+            ("K", "REINICIAR"),
+        });
+        set.moveSign = PaperSign("Cartel_Moverse", "CONTROLES", new[] { ("A D", "MOVERSE") });
+    }
+
+    static Sprite PaperSign(string name, string title, (string keys, string action)[] rows)
+    {
+        Color paper = Hex("D6D2C4");
+        int keysWidth = rows.Max(r => r.keys.Split(' ').Sum(k => PixelText.Width(k) + 6) - 2);
+        int actionsWidth = rows.Max(r => PixelText.Width(r.action));
+
+        // el papel; alrededor queda sitio para su sombra en la pared y para la cinta.
+        // Medidas pares: asi el cartel cae justo en la rejilla de pixeles
+        const int left = 4, bottom = 6;
+        int width = Mathf.Max(18 + keysWidth + actionsWidth, PixelText.Width(title) + 16);
+        width += width % 2;
+        int height = 20 + rows.Length * 14;
+        var sign = Canvas(width + 8, height + 10);
+        Paint(sign, left + 2, bottom - 2, width, height, new Color(0f, 0f, 0f, 0.35f));
+        Paint(sign, left, bottom, width, height, Hex("A9A595"));
+        Paint(sign, left + 1, bottom + 1, width - 2, height - 2, paper);
+        Paint(sign, left + 1, bottom + height - 14, width - 2, 13, Hex("9E2B30"));
+        PixelText.Draw(sign, title, left + (width - PixelText.Width(title)) / 2, bottom + height - 11, paper);
+
+        int y = bottom + height - 28;
+        foreach (var (keys, action) in rows)
+        {
+            int x = left + 6;
+            foreach (string key in keys.Split(' ')) x = Keycap(sign, key, x, y) + 2;
+            PixelText.Draw(sign, action, left + 12 + keysWidth, y + 2, Dark);
+            y -= 14;
+        }
+
+        Tape(sign, left + 3, bottom + height - 4, 1);
+        Tape(sign, left + width - 4, bottom + height - 4, -1);
+        return SaveSprite(sign, name, new Vector2(0.5f, 0.5f));
+    }
+
+    // muestra de mutageno: un vial con tapa y base de metal y el liquido verde del tanque, con un brillo y burbujas
+    static void CreateReplicaSample(Set set)
+    {
+        var vial = Canvas(14, 22);
+        Paint(vial, 2, 0, 10, 3, Dark);
+        Paint(vial, 3, 1, 8, 1, Mid3);
+        Paint(vial, 2, 3, 10, 15, new Color(0.75f, 0.95f, 1f, 0.8f));
+        for (int y = 4; y < 17; y++)
+            Paint(vial, 3, y, 8, 1, Color.Lerp(new Color(0.15f, 0.6f, 0.3f), new Color(0.4f, 1f, 0.6f), (y - 4) / 12f));
+        Paint(vial, 4, 6, 1, 9, new Color(0.9f, 1f, 0.95f));
+        vial.SetPixel(8, 9, new Color(0.85f, 1f, 0.9f));
+        vial.SetPixel(7, 13, new Color(0.85f, 1f, 0.9f));
+        Paint(vial, 1, 18, 12, 4, Dark);
+        Paint(vial, 2, 19, 10, 2, Mid3);
+        Paint(vial, 2, 20, 10, 1, Light2);
+        set.replicaSample = SaveSprite(vial, "Muestra_Mutageno", new Vector2(0.5f, 0.5f));
+    }
+
+    // tecla de teclado con las esquinas redondeadas y un pixel de sombra debajo; devuelve donde acaba
+    static int Keycap(Texture2D texture, string label, int x, int y)
+    {
+        int width = PixelText.Width(label) + 4;
+        Paint(texture, x + 1, y - 1, width - 2, 1, Hex("8C8879"));
+        Paint(texture, x + 1, y, width - 2, 11, Dark);
+        Paint(texture, x, y + 1, width, 9, Dark);
+        Paint(texture, x + 1, y + 1, width - 2, 9, Hex("ECEAE2"));
+        PixelText.Draw(texture, label, x + 2, y + 2, Dark);
+        return x + width;
+    }
+
+    // tira de cinta cruzando en diagonal una esquina de arriba (side = 1 la izquierda, -1 la derecha)
+    static void Tape(Texture2D texture, int x, int y, int side)
+    {
+        Color tape = Hex("E2D9AE"), edge = Hex("9C9270");
+        for (int u = -8; u <= 8; u++)
+            for (int v = -8; v <= 8; v++)
+            {
+                int across = Mathf.Abs(u + v), along = Mathf.Abs(u - v);
+                int px = x + u * side, py = y + v;
+                if (across > 4 || along > 11 || px < 0 || py < 0 || px >= texture.width || py >= texture.height) continue;
+                texture.SetPixel(px, py, across == 4 || along >= 10 ? edge : tape);
+            }
+    }
+
+    // ---------- cinematica del principio ----------
+
+    static void CreateIntroSprites(Set set)
+    {
+        // tanque del especimen: 3 de ancho y 5.5 de alto. Base y tapa de metal y un tubo de cristal en medio
+        const int width = 96, height = 176, cap = 14;
+        var tank = Canvas(width, height);
+        Paint(tank, 8, cap, width - 16, height - 2 * cap, new Color(0.06f, 0.12f, 0.11f, 0.9f));
+        TankCap(tank, 0, width, cap);
+        TankCap(tank, height - cap, width, cap);
+        for (int x = 16; x < width - 16; x += 14) Paint(tank, x, 6, 3, 2, Hex("4FE08A"));
+        set.specimenTank = SaveSprite(tank, "Tanque_Especimen", new Vector2(0.5f, 0f));
+
+        // liquido verde: mas oscuro abajo y con la superficie clara
+        var liquid = Canvas(width, height);
+        int surface = height - cap - 10;
+        for (int y = cap; y < surface; y++)
+            Paint(liquid, 9, y, width - 18, 1, Color.Lerp(new Color(0.08f, 0.4f, 0.22f, 0.8f), new Color(0.3f, 0.9f, 0.5f, 0.55f), (y - cap) / (float)(surface - cap)));
+        Paint(liquid, 9, surface, width - 18, 1, new Color(0.75f, 1f, 0.85f, 0.9f));
+        set.specimenLiquid = SaveSprite(liquid, "Tanque_Liquido", new Vector2(0.5f, 0f));
+
+        set.specimenGlass = new[]
+        {
+            SaveSprite(TankGlass(0, width, height, cap), "Tanque_Cristal", new Vector2(0.5f, 0f)),
+            SaveSprite(TankGlass(1, width, height, cap), "Tanque_Cristal_Rajado", new Vector2(0.5f, 0f)),
+            SaveSprite(TankGlass(2, width, height, cap), "Tanque_Cristal_Roto", new Vector2(0.5f, 0f)),
+        };
+
+        // cientificos con bata: cada uno con su piel, su pelo y algo distinto (gafas o carpeta)
+        set.scientists = new[]
+        {
+            ScientistFrames("Cientifico_1", Hex("E8B896"), Hex("5A3A22"), true, false),
+            ScientistFrames("Cientifico_2", Hex("B57A52"), Hex("1E1A1A"), false, true),
+            ScientistFrames("Cientifico_3", Hex("7A4E33"), Hex("B9B9B9"), true, true),
+        };
+        set.foregroundScientists = new[]
+        {
+            ForegroundScientist("Cientifico_Delante_1", false),
+            ForegroundScientist("Cientifico_Delante_2", true),
+        };
+        CreateObservationWindow(set);
+    }
+
+    // ventana de la sala de observacion (la cinematica se ve a traves de ella): marco de metal para un hueco
+    // de 12x7 tiles, la pared oscura de alrededor y el cristal entero, rajado y roto
+    static void CreateObservationWindow(Set set)
+    {
+        const int width = 384, height = 224, border = 6;
+        int outerWidth = width + 2 * border, outerHeight = height + 2 * border;
+        var frame = Canvas(outerWidth, outerHeight);
+        for (int i = 0; i < border; i++)
+        {
+            Color c = i == 0 ? Hex("050608") : i == border - 1 ? Light : i < 3 ? Dark : Mid2;
+            Paint(frame, i, i, outerWidth - 2 * i, 1, c);
+            Paint(frame, i, outerHeight - 1 - i, outerWidth - 2 * i, 1, c);
+            Paint(frame, i, i, 1, outerHeight - 2 * i, c);
+            Paint(frame, outerWidth - 1 - i, i, 1, outerHeight - 2 * i, c);
+        }
+        set.windowFrame = SaveSprite(frame, "Ventana_Marco", new Vector2(0.5f, 0.5f));
+
+        var wall = Canvas(32, 32);
+        Paint(wall, 0, 0, 32, 32, Hex("0D1016"));
+        Paint(wall, 0, 0, 32, 1, Hex("171B23"));
+        Paint(wall, 0, 0, 1, 32, Hex("171B23"));
+        wall.SetPixel(4, 27, Hex("1D222C"));
+        wall.SetPixel(27, 27, Hex("1D222C"));
+        set.windowWall = SaveSprite(wall, "Pared_Observacion", new Vector2(0.5f, 0.5f));
+
+        set.windowGlass = new[]
+        {
+            SaveSprite(WindowGlass(0, width, height), "Ventana_Cristal", new Vector2(0.5f, 0.5f)),
+            SaveSprite(WindowGlass(1, width, height), "Ventana_Cristal_Rajado", new Vector2(0.5f, 0.5f)),
+            SaveSprite(WindowGlass(2, width, height), "Ventana_Cristal_Roto", new Vector2(0.5f, 0.5f)),
+        };
+    }
+
+    // cristal: tinte azulado, reflejos en diagonal, mas oscuro junto al marco, huellas y polvo.
+    // state: 0 entero, 1 rajado desde un golpe, 2 roto (solo quedan picos pegados al marco)
+    static Texture2D WindowGlass(int state, int width, int height)
+    {
+        var glass = Canvas(width, height);
+        for (int x = 0; x < width; x++)
+            for (int y = 0; y < height; y++)
+            {
+                int edge = Mathf.Min(Mathf.Min(x, width - 1 - x), Mathf.Min(y, height - 1 - y));
+                if (state == 2 && edge >= 4 + Mathf.Abs((x * 7 + y * 13) / 9 % 16 - 8)) continue;
+                Color c = Color.Lerp(new Color(0.1f, 0.15f, 0.2f, 0.25f), new Color(0.6f, 0.8f, 0.9f, 0.06f), edge / 12f);
+                int diagonal = x + y;
+                if (diagonal >= 110 && diagonal < 145) c = new Color(0.85f, 0.95f, 1f, 0.1f);
+                if (diagonal >= 152 && diagonal < 157) c = new Color(0.85f, 0.95f, 1f, 0.14f);
+                if (diagonal >= 400 && diagonal < 418) c = new Color(0.85f, 0.95f, 1f, 0.08f);
+                if (diagonal >= 425 && diagonal < 428) c = new Color(0.85f, 0.95f, 1f, 0.12f);
+                glass.SetPixel(x, y, c);
+            }
+
+        var rng = new System.Random(11);
+        if (state != 2)
+        {
+            foreach (Vector2Int spot in new[] { new Vector2Int(110, 40), new Vector2Int(250, 52), new Vector2Int(280, 34) })
+                for (int i = 0; i < 90; i++)
+                {
+                    float angle = (float)rng.NextDouble() * Mathf.PI * 2f, radius = (float)rng.NextDouble() * 13f;
+                    glass.SetPixel(spot.x + (int)(Mathf.Cos(angle) * radius), spot.y + (int)(Mathf.Sin(angle) * radius * 1.3f), new Color(0.8f, 0.85f, 0.9f, 0.09f));
+                }
+            for (int i = 0; i < 140; i++)
+                glass.SetPixel(rng.Next(width), rng.Next(height), new Color(0.75f, 0.78f, 0.8f, 0.12f + (float)rng.NextDouble() * 0.12f));
+        }
+
+        // grietas que salen del golpe, con alguna rama
+        if (state == 1)
+            for (int i = 0; i < 10; i++)
+            {
+                float angle = i * Mathf.PI * 2f / 10f + (float)rng.NextDouble() * 0.4f, x = 280f, y = 150f;
+                int length = rng.Next(40, 120);
+                for (int s = 0; s < length; s++)
+                {
+                    angle += ((float)rng.NextDouble() - 0.5f) * 0.5f;
+                    x += Mathf.Cos(angle);
+                    y += Mathf.Sin(angle);
+                    if (x < 0 || x >= width || y < 0 || y >= height) break;
+                    glass.SetPixel((int)x, (int)y, new Color(1f, 1f, 1f, 0.75f));
+                    if (s == length / 2) length += rng.Next(0, 20);
+                }
+            }
+        return glass;
+    }
+
+    // base o tapa del tanque: chapa con borde claro arriba, sombra abajo y remaches
+    static void TankCap(Texture2D texture, int y, int width, int height)
+    {
+        Paint(texture, 0, y, width, height, Dark);
+        Paint(texture, 1, y + 1, width - 2, height - 2, Mid3);
+        Paint(texture, 1, y + 1, width - 2, 2, Mid2);
+        Paint(texture, 1, y + height - 2, width - 2, 1, Light2);
+        for (int x = 5; x < width; x += 9) texture.SetPixel(x, y + height / 2 + 1, Light2);
+    }
+
+    // cristal de delante del tanque. state: 0 entero, 1 rajado, 2 roto (quedan dientes en la base y en la tapa)
+    static Texture2D TankGlass(int state, int width, int height, int cap)
+    {
+        var glass = Canvas(width, height);
+        var rng = new System.Random(7);
+        int left = 8, right = width - 9, bottom = cap, top = height - cap - 1;
+        for (int x = left; x <= right; x++)
+        {
+            int keepBottom = top, keepTop = bottom;
+            if (state == 2)
+            {
+                keepBottom = bottom + 14 - Mathf.Abs(x % 24 - 12) + rng.Next(0, 3);
+                keepTop = top - 11 + Mathf.Abs((x + 7) % 18 - 9) - rng.Next(0, 3);
+            }
+            for (int y = bottom; y <= top; y++)
+            {
+                if (state == 2 && y > keepBottom && y < keepTop) continue;
+                Color c = new Color(0.6f, 0.9f, 1f, 0.08f);
+                if (x == left + 5 || x == left + 6 || x == left + 11) c = new Color(1f, 1f, 1f, 0.35f);
+                if (x >= right - 5) c = new Color(0.3f, 0.6f, 0.7f, 0.18f);
+                if (x == left || x == right) c = new Color(0.75f, 0.95f, 1f, 0.7f);
+                glass.SetPixel(x, y, c);
+            }
+        }
+
+        // grietas que salen de un punto
+        if (state == 1)
+            for (int i = 0; i < 7; i++)
+            {
+                float angle = i * Mathf.PI * 2f / 7f + (float)rng.NextDouble() * 0.6f, x = width / 2f + 3f, y = height / 2f;
+                int length = rng.Next(20, 40);
+                for (int s = 0; s < length; s++)
+                {
+                    angle += ((float)rng.NextDouble() - 0.5f) * 0.6f;
+                    x += Mathf.Cos(angle);
+                    y += Mathf.Sin(angle);
+                    if (x <= left || x >= right || y <= bottom || y >= top) break;
+                    glass.SetPixel((int)x, (int)y, new Color(1f, 1f, 1f, 0.9f));
+                }
+            }
+        return glass;
+    }
+
+    // cientifico que pasa por delante de la camara: se ve de cintura para arriba (lo corta el borde de la pantalla),
+    // casi en silueta y con un filo de luz por delante. 64x128 mirando a la derecha; fotogramas: quieto y 2 pasos
+    static Sprite[] ForegroundScientist(string name, bool clipboard)
+    {
+        Color coat = Hex("232A35"), back = Hex("161A22"), opening = Hex("2E3746"), skin = Hex("2A2224"), hair = Hex("0E0F14");
+        var strip = Canvas(64 * 3, 128);
+        for (int frame = 0; frame < 3; frame++)
+        {
+            int ox = frame * 64, up = frame == 1 ? 1 : 0;
+
+            // bata hasta abajo con los hombros redondeados, la espalda en sombra y la abertura delante
+            Paint(strip, ox + 15, up, 34, 79, coat);
+            Paint(strip, ox + 17, 79 + up, 30, 3, coat);
+            Paint(strip, ox + 20, 82 + up, 24, 3, coat);
+            Paint(strip, ox + 15, up, 4, 79, back);
+            Paint(strip, ox + 40, up, 2, 70, opening);
+
+            // cuello y cabeza redonda con el pelo por arriba y por detras, nariz y el brillo de las gafas
+            Paint(strip, ox + 28, 84 + up, 8, 7, skin);
+            for (int x = 20; x <= 46; x++)
+                for (int y = 89; y <= 115; y++)
+                {
+                    float dx = x - 33f, dy = y - 102f;
+                    if (dx * dx + dy * dy > 13.5f * 13.5f) continue;
+                    strip.SetPixel(ox + x, y + up, y > 106 || x < 29 ? hair : skin);
+                }
+            Paint(strip, ox + 47, 100 + up, 1, 3, skin);
+            Paint(strip, ox + 42, 104 + up, 3, 1, Hex("9AA8B8"));
+
+            // brazo de delante: suelto o doblado sujetando una carpeta
+            if (clipboard)
+            {
+                Paint(strip, ox + 40, 46 + up, 8, 34, coat);
+                Paint(strip, ox + 40, 40 + up, 16, 8, coat);
+                Paint(strip, ox + 50, 34 + up, 11, 26, Hex("2B2119"));
+                Paint(strip, ox + 50, 57 + up, 11, 2, Hex("4A4440"));
+            }
+            else
+            {
+                Paint(strip, ox + 40, 22 + up, 8, 58, coat);
+                Paint(strip, ox + 41, 14 + up, 6, 8, skin);
+            }
+
+            // filo de luz: el ultimo pixel de cada fila por delante
+            for (int y = 0; y < 128; y++)
+                for (int x = ox + 63; x >= ox; x--)
+                {
+                    if (strip.GetPixel(x, y).a == 0f) continue;
+                    strip.SetPixel(x, y, Hex("5B6B80"));
+                    break;
+                }
+        }
+        return SaveStrip(strip, name, 64, 128, new Vector2(0.5f, 0f));
+    }
+
+
+    static Sprite[] ScientistFrames(string name, Color skin, Color hair, bool glasses, bool clipboard)
+    {
+        var strip = Canvas(24 * 5, 48);
+        for (int frame = 0; frame < 5; frame++) DrawScientist(strip, frame * 24, frame, skin, hair, glasses, clipboard);
+        return SaveStrip(strip, name, 24, 48, new Vector2(0.5f, 0f));
+    }
+
+    // cientifico de 24x48 mirando a la derecha. frame 0: quieto; 1 a 4: pasos
+    static void DrawScientist(Texture2D t, int ox, int frame, Color skin, Color hair, bool glasses, bool clipboard)
+    {
+        Color coat = Hex("E4E8EC"), coatShade = Hex("A9B3BE");
+        int stride = new[] { 0, 3, 0, -3, 0 }[frame];
+        int up = frame == 2 || frame == 4 ? 1 : 0;
+
+        // piernas inclinadas segun el paso (la de atras mas oscura) y zapatos
+        for (int y = 2; y <= 14 + up; y++)
+        {
+            int k = Mathf.RoundToInt(stride * (14f + up - y) / (12f + up));
+            Paint(t, ox + 9 - k, y, 2, 1, Hex("232838"));
+            Paint(t, ox + 12 + k, y, 2, 1, Hex("2E3546"));
+        }
+        Paint(t, ox + 9 - stride, 0, 3, 2, Hex("15161A"));
+        Paint(t, ox + 12 + stride, 0, 3, 2, Hex("15161A"));
+
+        // bata hasta las rodillas con la espalda en sombra, la abertura, un bolsillo y el cuello de la camisa
+        Paint(t, ox + 7, 12 + up, 11, 5, coat);
+        Paint(t, ox + 8, 17 + up, 9, 15, coat);
+        Paint(t, ox + 9, 32 + up, 7, 2, coat);
+        Paint(t, ox + 7, 12 + up, 1, 5, coatShade);
+        Paint(t, ox + 8, 17 + up, 1, 15, coatShade);
+        Paint(t, ox + 14, 12 + up, 1, 19, coatShade);
+        Paint(t, ox + 10, 21 + up, 3, 1, coatShade);
+        Paint(t, ox + 13, 31 + up, 2, 3, Hex("6F93C2"));
+
+        // cabeza: pelo por arriba y por detras, el ojo mirando a la derecha
+        Paint(t, ox + 10, 34 + up, 7, 8, skin);
+        Paint(t, ox + 9, 40 + up, 8, 3, hair);
+        Paint(t, ox + 9, 36 + up, 2, 5, hair);
+        t.SetPixel(ox + 15, 38 + up, Dark);
+        if (glasses)
+        {
+            t.SetPixel(ox + 14, 38 + up, Light2);
+            t.SetPixel(ox + 16, 38 + up, Light2);
+        }
+
+        // brazo de delante: con carpeta va doblado; si no, se balancea al contrario que la pierna
+        if (clipboard)
+        {
+            Paint(t, ox + 14, 24 + up, 2, 8, coat);
+            Paint(t, ox + 16, 19 + up, 5, 8, Hex("6B4A2B"));
+            Paint(t, ox + 17, 20 + up, 3, 6, Hex("EDEDE6"));
+            Paint(t, ox + 15, 23 + up, 2, 2, skin);
+        }
+        else
+        {
+            for (int y = 19; y <= 31; y++)
+            {
+                int k = Mathf.RoundToInt(-stride * 0.6f * (31f - y) / 12f);
+                Paint(t, ox + 14 + k, y + up, 2, 1, y > 20 ? coat : skin);
+                if (y > 20) t.SetPixel(ox + 14 + k, y + up, coatShade);
+            }
+        }
+
+        // contorno oscuro para que se lea sobre cualquier fondo
+        var outline = new List<Vector2Int>();
+        for (int x = ox; x < ox + 24; x++)
+            for (int y = 0; y < 48; y++)
+            {
+                if (t.GetPixel(x, y).a > 0f) continue;
+                if ((x > ox && t.GetPixel(x - 1, y).a > 0f) || (x < ox + 23 && t.GetPixel(x + 1, y).a > 0f) ||
+                    (y > 0 && t.GetPixel(x, y - 1).a > 0f) || (y < 47 && t.GetPixel(x, y + 1).a > 0f))
+                    outline.Add(new Vector2Int(x, y));
+            }
+        foreach (Vector2Int p in outline) t.SetPixel(p.x, p.y, Hex("14161D"));
     }
 
     // franja de peligro amarilla y negra en diagonal

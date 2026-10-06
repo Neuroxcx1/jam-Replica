@@ -20,9 +20,6 @@ public class ReplicaCounter : MonoBehaviour
 
     void Awake()
     {
-        // sobrevive al reinicio con T
-        DontDestroyOnLoad(gameObject);
-
         /*var canvas = gameObject.AddComponent<Canvas>();
         canvas.renderMode = RenderMode.ScreenSpaceOverlay;
         var scaler = gameObject.AddComponent<CanvasScaler>();
