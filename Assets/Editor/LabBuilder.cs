@@ -710,18 +710,24 @@ public static partial class LabBuilder
 
     static void Turret(int x, int floorY)
     {
-        var go = NewObject(traps, "Torreta", new Vector3(x + 0.5f, floorY), ground);
+        Place(LevelPrefab("Torreta", CreateTurret), x + 0.5f, floorY);
+    }
+
+    // torreta de seguridad, dibujada mirando a la izquierda (Facing Right la voltea)
+    static GameObject CreateTurret()
+    {
+        var go = NewObject(null, "Torreta", Vector3.zero, ground);
         SpriteRenderer body = AddSprite(go, art.turret[0], 2);
         var col = go.AddComponent<BoxCollider2D>();
         col.size = new Vector2(0.95f, 0.75f);
         col.offset = new Vector2(0f, 0.375f);
 
-        Transform muzzle = NewObject(go.transform, "Canon", new Vector3(x - 0.1f, floorY + 0.5f), 0).transform;
+        Transform muzzle = NewObject(go.transform, "Canon", new Vector3(-0.6f, 0.5f), 0).transform;
         LineRenderer sight = Line(go.transform, "Mira", 1f / 32f);
         LineRenderer bolt = Line(go.transform, "Rayo", 2f / 32f);
         bolt.startColor = bolt.endColor = new Color(0.85f, 0.95f, 1f);
         Light2D flash = AddLight(muzzle, "Fogonazo", muzzle.position, new Color(0.7f, 0.85f, 1f), 2.2f, 4f);
-        AddLight(go.transform, "Piloto", new Vector3(x + 0.5f, floorY + 0.6f), AlarmColor, 0.5f, 1.5f);
+        AddLight(go.transform, "Piloto", new Vector3(0f, 0.6f), AlarmColor, 0.5f, 1.5f);
 
         var turret = go.AddComponent<Turret>();
         SetRef(turret, "muzzle", muzzle);
@@ -735,6 +741,7 @@ public static partial class LabBuilder
         so.FindProperty("sightMask").intValue = (1 << ground) | 1;
         so.FindProperty("targetMask").intValue = 1;
         so.ApplyModifiedPropertiesWithoutUndo();
+        return go;
     }
 
     // suelo electrificado de x0 a x1 encima del suelo que esta a la altura floorY
