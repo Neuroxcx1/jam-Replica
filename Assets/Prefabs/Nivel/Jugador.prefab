@@ -397,7 +397,7 @@ MonoBehaviour:
   groundLayer:
     serializedVersion: 2
     m_Bits: 256
-  maxReplicas: 6
+  maxReplicas: 2
   replicateCooldown: 0.25
   clonePrefab: {fileID: 4505683994145389960, guid: 8b12d470a8a0f834fb98e36c82bd0dd7, type: 3}
   bodyPrefab: {fileID: 1093909783041753337, guid: d8ee58fa98fc530468066f2af6d31a8d, type: 3}
