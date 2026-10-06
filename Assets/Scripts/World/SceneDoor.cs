@@ -15,13 +15,19 @@ public class SceneDoor : MonoBehaviour
     void OnTriggerEnter2D(Collider2D other)
     {
         if (crossing || !other.TryGetComponent(out Player _)) return;
+        if (!Go(scene, fadeTime)) return;
         crossing = true;
         GetComponent<Collider2D>().enabled = false;
-        Go(scene, fadeTime);
     }
 
-    public static void Go(string scene, float fadeTime = 0.7f)
+    public static bool Go(string scene, float fadeTime = 0.7f)
     {
+        if (!Application.CanStreamedLevelBeLoaded(scene))
+        {
+            Debug.LogError($"No se puede cargar la escena \"{scene}\": tiene que estar en File > Build Profiles > Scene List");
+            return false;
+        }
+
         // un objeto aparte que sobrevive al cambio de escena para aclarar la pantalla al otro lado
         var fader = new GameObject("Cambio de escena").AddComponent<SceneDoor>();
         fader.scene = scene;
@@ -29,14 +35,15 @@ public class SceneDoor : MonoBehaviour
         fader.crossing = true;
         DontDestroyOnLoad(fader.gameObject);
         fader.StartCoroutine(fader.Cross());
+        return true;
     }
 
     IEnumerator Cross()
     {
-        for (; fade < 1f; fade += Time.deltaTime / fadeTime) yield return null;
+        for (; fade < 1f; fade += Time.unscaledDeltaTime / fadeTime) yield return null;
         fade = 1f;
         yield return SceneManager.LoadSceneAsync(scene);
-        for (; fade > 0f; fade -= Time.deltaTime / fadeTime) yield return null;
+        for (; fade > 0f; fade -= Time.unscaledDeltaTime / fadeTime) yield return null;
         Destroy(gameObject);
     }
 
