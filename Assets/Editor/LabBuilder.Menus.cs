@@ -17,6 +17,8 @@ public static partial class LabBuilder
     const string ControlIconsAssetPath = "Assets/Settings/Iconos de controles.asset";
 
     static readonly Color MenuGreen = new Color(0.45f, 1f, 0.6f);
+    // la cancion es fuerte: asi queda por debajo de los efectos y del ambiente de la intro
+    const float MusicVolume = 0.35f;
 
     static AudioMixerGroup MixerGroup(string name)
     {
@@ -38,9 +40,12 @@ public static partial class LabBuilder
         scaler.matchWidthOrHeight = 0.5f;
         go.AddComponent<GraphicRaycaster>();
 
+        // la musica de todo el juego, en bucle (su version "(bucle)" dura justo 64 compases y no se nota al repetir)
         var music = go.AddComponent<AudioSource>();
+        music.clip = AssetDatabase.LoadAssetAtPath<AudioClip>("Assets/Sounds/Musica (bucle).wav");
         music.outputAudioMixerGroup = MixerGroup("Musica");
         music.loop = true;
+        music.volume = MusicVolume;
         music.playOnAwake = false;
         var ui = go.AddComponent<AudioSource>();
         ui.outputAudioMixerGroup = MixerGroup("Efectos");
