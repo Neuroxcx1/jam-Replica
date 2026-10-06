@@ -9696,10 +9696,10 @@ Camera:
   m_LensShift: {x: 0, y: 0}
   m_NormalizedViewPortRect:
     serializedVersion: 2
-    x: 0.307925
+    x: 0.19882813
     y: 0
-    width: 0.5667809
-    height: 0.7329624
+    width: 0.36597225
+    height: 0.36597222
   near clip plane: 0.3
   far clip plane: 1000
   field of view: 34
@@ -15245,11 +15245,7 @@ MonoBehaviour:
         m_SelectedSource:
           rid: -2
         m_Provider2DCache:
-          rid: 4315816352807124995
-    - rid: 4315816352807124995
-      type: {class: 'Provider2DCache`1[[UnityEngine.Rendering.Universal.Light2DProvider, Unity.RenderPipelines.Universal.2D.Runtime]]', ns: UnityEngine.Rendering.Universal, asm: Unity.RenderPipelines.Universal.2D.Runtime}
-      data:
-        m_Cache: []
+          rid: -2
 --- !u!4 &619394802
 Transform:
   m_ObjectHideFlags: 0
@@ -21739,7 +21735,7 @@ Transform:
   m_GameObject: {fileID: 868233074}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 5.5, y: 9.5, z: 0}
+  m_LocalPosition: {x: 19.01, y: 9.04, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -51813,7 +51809,7 @@ MonoBehaviour:
   m_ShadowMesh:
     rid: 3520814462650810370
   m_CastingOption: 1
-  m_PreviousTrimEdge: 0
+  m_PreviousTrimEdge: -1
   m_PreviousEdgeProcessing: 1
   m_PreviousShadowCastingSource: 2
   m_PreviousShadowShape2DSource: {fileID: 1904324467}
@@ -51836,7 +51832,7 @@ MonoBehaviour:
           m_Center: {x: 0, y: 0, z: 0}
           m_Extent: {x: 0, y: 0, z: 0}
         m_EdgeProcessing: 1
-        m_TrimEdge: 0
+        m_TrimEdge: -1
         m_FlipX: 0
         m_FlipY: 0
         m_InitialTrim: 0
@@ -51847,28 +51843,7 @@ MonoBehaviour:
         m_SelectedSource:
           rid: -2
         m_Provider2DCache:
-          rid: 4315816352807124998
-    - rid: 4315816352807124998
-      type: {class: 'Provider2DCache`1[[UnityEngine.Rendering.Universal.ShadowShape2DProvider, Unity.RenderPipelines.Universal.2D.Runtime]]', ns: UnityEngine.Rendering.Universal, asm: Unity.RenderPipelines.Universal.2D.Runtime}
-      data:
-        m_Cache:
-        - m_Key:
-            m_TypeName: ShadowShape2DProvider_Collider2D
-            m_Component: {fileID: 1904324467}
-            m_UsesComponent: 1
-          m_Value:
-            m_Provider:
-              rid: 4315816352807124999
-        - m_Key:
-            m_TypeName: ShadowShape2DProvider_Collider2D
-            m_Component: {fileID: 1904324466}
-            m_UsesComponent: 1
-          m_Value:
-            m_Provider:
-              rid: 4315816352807124999
-    - rid: 4315816352807124999
-      type: {class: ShadowShape2DProvider_Collider2D, ns: UnityEngine.Rendering.Universal, asm: Unity.RenderPipelines.Universal.2D.Runtime}
-      data: 
+          rid: -2
 --- !u!66 &1904324466
 CompositeCollider2D:
   m_ObjectHideFlags: 0
