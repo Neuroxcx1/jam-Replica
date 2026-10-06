@@ -101,7 +101,10 @@ public class Player : MonoBehaviour
 
         if (IsDead) return;
 
-        MoveInput = moveAction.ReadValue<Vector2>().x;
+        // el stick del mando rebota un poco hacia el otro lado al soltarlo: solo cuenta pasada la mitad,
+        // y entonces a tope, como las teclas (si no, al soltarlo yendo a la izquierda te giraba a la derecha)
+        float x = moveAction.ReadValue<Vector2>().x;
+        MoveInput = Mathf.Abs(x) < 0.5f ? 0f : Mathf.Sign(x);
         if (MoveInput != 0)
         {
             facing = MoveInput > 0 ? 1 : -1;
