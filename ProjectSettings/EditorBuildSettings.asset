@@ -17,5 +17,8 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/Nivel Tutorial.unity
     guid: b3af15653ef365945b31ab97f6ac89ad
+  - enabled: 1
+    path: Assets/Scenes/Esena2.unity
+    guid: db1056e22ce929648a57cc85e28dbdea
   m_configObjects:
     com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 2bcd2660ca9b64942af0de543d8d7100, type: 3}
