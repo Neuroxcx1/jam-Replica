@@ -298,14 +298,15 @@ public static partial class LabBuilder
         };
         AssetDatabase.SaveAssets();
 
-        // la sala: ambiente y voces desde el menu; el zumbido de emergencia cuando vuelve la corriente
+        // la sala: ambiente y voces desde el menu; el zumbido de emergencia cuando vuelve la corriente.
+        // Los que se repiten van con su version "(bucle)": el final se funde con el principio y no se nota el corte
         Transform old = intro.transform.Find("Sonido de la sala");
         if (old != null) Object.DestroyImmediate(old.gameObject);
         var room = new GameObject("Sonido de la sala").transform;
         room.SetParent(intro.transform, false);
-        SetRef(intro, "ambience", Loop(room, "Ambiente", "Sonido ambiente 2", 0.25f, true));
-        SetArray(intro, "voices", new[] { Loop(room, "Voces", "Voces", 1f, true), Loop(room, "Voces 2", "Voces 2", 1f, true) });
-        SetRef(intro, "emergencyAmbience", Loop(room, "Corriente de emergencia", "Sonido ambiente 1", 0.7f, false));
+        SetRef(intro, "ambience", Loop(room, "Ambiente", "Sonido ambiente 2 (bucle)", 0.25f, true));
+        SetArray(intro, "voices", new[] { Loop(room, "Voces", "Voces (bucle)", 1f, true), Loop(room, "Voces 2", "Voces 2 (bucle)", 1f, true) });
+        SetRef(intro, "emergencyAmbience", Loop(room, "Corriente de emergencia", "Sonido ambiente 1 (bucle)", 0.7f, false));
         SetRef(intro, "quakeSound", quake);
 
         var window = Object.FindAnyObjectByType<ObservationWindow>(FindObjectsInactive.Include);
@@ -314,6 +315,12 @@ public static partial class LabBuilder
         var tank = Object.FindAnyObjectByType<SpecimenTank>(FindObjectsInactive.Include);
         SetRef(tank, "crackSound", tankCrack);
         SetRef(tank, "breakSound", tankBreak);
+        var bubbles = (AudioSource)new SerializedObject(tank).FindProperty("bubbleSound").objectReferenceValue;
+        if (bubbles != null)
+        {
+            bubbles.clip = Clip("Sonido de tanque de agua (bucle)");
+            EditorUtility.SetDirty(bubbles);
+        }
 
         // un grito por cientifico (los tres primeros que huyen; mas a la vez sonaria raro)
         var scientists = new SerializedObject(intro).FindProperty("scientists");

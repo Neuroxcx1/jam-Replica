@@ -464,7 +464,7 @@ public static partial class LabBuilder
 
         // el burbujeo del tanque, hasta que revienta
         var sound = go.AddComponent<AudioSource>();
-        sound.clip = AssetDatabase.LoadAssetAtPath<AudioClip>("Assets/Sounds/Intro/Sonido de tanque de agua.wav");
+        sound.clip = AssetDatabase.LoadAssetAtPath<AudioClip>("Assets/Sounds/Intro/Sonido de tanque de agua (bucle).wav");
         sound.outputAudioMixerGroup = MixerGroup("Efectos");
         sound.loop = true;
         sound.volume = 0.6f;
