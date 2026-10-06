@@ -25,5 +25,7 @@ public class ControlHint : MonoBehaviour
         if (sprite == null) return;
         icon.sprite = sprite;
         icon.rectTransform.sizeDelta = sprite.rect.size * pixelSize;
+        // la fila se vuelve a colocar con el ancho nuevo (Shift es mas ancha que RB)
+        if (transform.parent is RectTransform row) LayoutRebuilder.MarkLayoutForRebuild(row);
     }
 }

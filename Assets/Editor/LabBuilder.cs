@@ -384,7 +384,6 @@ public static partial class LabBuilder
         Button start = MenuButton(go.transform, "INICIAR", new Vector2(160f, -16f), font);
         Button options = MenuButton(go.transform, "OPCIONES", new Vector2(160f, -88f), font);
         Button quit = MenuButton(go.transform, "SALIR", new Vector2(160f, -160f), font);
-        MenuText(go.transform, "Ayuda", "W S / FLECHAS     ENTER", 24, new Vector2(164f, -400f), new Color(1f, 1f, 1f, 0.4f), font);
         new GameObject("EventSystem", typeof(EventSystem), typeof(InputSystemUIInputModule));
 
         var menu = go.AddComponent<TitleMenu>();

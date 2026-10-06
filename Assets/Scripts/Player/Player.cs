@@ -225,11 +225,11 @@ public class Player : MonoBehaviour
     }
 
     // esa copia vuelve como replica (con Q la mas antigua; el montacargas devuelve el hielo que rompe)
-    public void Return(GameObject piece)
+    public void Return(GameObject piece, bool ghost = true)
     {
         if (!placed.Remove(piece)) return;
         if (recallEffect != null) Instantiate(recallEffect, piece.transform.position, Quaternion.identity);
-        if (recallGhost != null) Instantiate(recallGhost).Fly(piece.GetComponentInChildren<SpriteRenderer>(), transform);
+        if (ghost && recallGhost != null) Instantiate(recallGhost).Fly(piece.GetComponentInChildren<SpriteRenderer>(), transform);
         Destroy(piece);
         ReplicasLeft = Mathf.Min(maxReplicas, ReplicasLeft + 1);
     }
@@ -247,6 +247,9 @@ public class Player : MonoBehaviour
         if (IsDead) return;
 
         if (deathEffect != null) Instantiate(deathEffect, transform.position, Quaternion.identity);
+        // todas tus copias (clones, cuerpos y hielo) desaparecen y vuelven como replicas: no queda nada tuyo por ahi
+        placed.RemoveAll(piece => piece == null);
+        foreach (GameObject piece in placed.ToArray()) Return(piece, false);
         stateMachine.ChangeState("dead");
     }
 

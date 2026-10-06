@@ -257,9 +257,9 @@ TextureImporter:
       name: keyboard_space
       rect:
         serializedVersion: 2
-        x: 0
+        x: 1
         y: 0
-        width: 48
+        width: 46
         height: 16
       alignment: 9
       pivot: {x: 0.5, y: 0.5}
@@ -279,9 +279,9 @@ TextureImporter:
       name: keyboard_shift
       rect:
         serializedVersion: 2
-        x: 0
+        x: 1
         y: 18
-        width: 32
+        width: 30
         height: 16
       alignment: 9
       pivot: {x: 0.5, y: 0.5}
@@ -301,9 +301,9 @@ TextureImporter:
       name: keyboard_ctrl
       rect:
         serializedVersion: 2
-        x: 0
+        x: 1
         y: 36
-        width: 32
+        width: 26
         height: 16
       alignment: 9
       pivot: {x: 0.5, y: 0.5}
@@ -323,9 +323,9 @@ TextureImporter:
       name: keyboard_alt
       rect:
         serializedVersion: 2
-        x: 0
+        x: 1
         y: 54
-        width: 32
+        width: 22
         height: 16
       alignment: 9
       pivot: {x: 0.5, y: 0.5}
@@ -345,9 +345,9 @@ TextureImporter:
       name: keyboard_tab
       rect:
         serializedVersion: 2
-        x: 0
+        x: 1
         y: 72
-        width: 32
+        width: 22
         height: 16
       alignment: 9
       pivot: {x: 0.5, y: 0.5}
@@ -367,9 +367,9 @@ TextureImporter:
       name: keyboard_escape
       rect:
         serializedVersion: 2
-        x: 0
+        x: 1
         y: 90
-        width: 16
+        width: 14
         height: 16
       alignment: 9
       pivot: {x: 0.5, y: 0.5}
@@ -389,9 +389,9 @@ TextureImporter:
       name: keyboard_arrow_up
       rect:
         serializedVersion: 2
-        x: 0
+        x: 1
         y: 108
-        width: 16
+        width: 14
         height: 16
       alignment: 9
       pivot: {x: 0.5, y: 0.5}
@@ -411,9 +411,9 @@ TextureImporter:
       name: keyboard_arrow_right
       rect:
         serializedVersion: 2
-        x: 0
+        x: 1
         y: 126
-        width: 16
+        width: 14
         height: 16
       alignment: 9
       pivot: {x: 0.5, y: 0.5}
@@ -433,9 +433,9 @@ TextureImporter:
       name: keyboard_arrow_down
       rect:
         serializedVersion: 2
-        x: 0
+        x: 1
         y: 144
-        width: 16
+        width: 14
         height: 16
       alignment: 9
       pivot: {x: 0.5, y: 0.5}
@@ -455,9 +455,9 @@ TextureImporter:
       name: keyboard_arrow_left
       rect:
         serializedVersion: 2
-        x: 0
+        x: 1
         y: 162
-        width: 16
+        width: 14
         height: 16
       alignment: 9
       pivot: {x: 0.5, y: 0.5}
@@ -477,9 +477,9 @@ TextureImporter:
       name: xbox_a
       rect:
         serializedVersion: 2
-        x: 0
+        x: 1
         y: 180
-        width: 16
+        width: 14
         height: 16
       alignment: 9
       pivot: {x: 0.5, y: 0.5}
@@ -499,9 +499,9 @@ TextureImporter:
       name: xbox_b
       rect:
         serializedVersion: 2
-        x: 0
+        x: 1
         y: 198
-        width: 16
+        width: 14
         height: 16
       alignment: 9
       pivot: {x: 0.5, y: 0.5}
@@ -521,9 +521,9 @@ TextureImporter:
       name: xbox_x
       rect:
         serializedVersion: 2
-        x: 0
+        x: 1
         y: 216
-        width: 16
+        width: 14
         height: 16
       alignment: 9
       pivot: {x: 0.5, y: 0.5}
@@ -543,9 +543,9 @@ TextureImporter:
       name: xbox_y
       rect:
         serializedVersion: 2
-        x: 0
+        x: 1
         y: 234
-        width: 16
+        width: 14
         height: 16
       alignment: 9
       pivot: {x: 0.5, y: 0.5}
@@ -653,9 +653,9 @@ TextureImporter:
       name: xbox_view
       rect:
         serializedVersion: 2
-        x: 0
+        x: 1
         y: 324
-        width: 16
+        width: 14
         height: 16
       alignment: 9
       pivot: {x: 0.5, y: 0.5}
@@ -675,9 +675,9 @@ TextureImporter:
       name: xbox_menu
       rect:
         serializedVersion: 2
-        x: 0
+        x: 1
         y: 342
-        width: 16
+        width: 14
         height: 16
       alignment: 9
       pivot: {x: 0.5, y: 0.5}
@@ -741,9 +741,9 @@ TextureImporter:
       name: keyboard_q
       rect:
         serializedVersion: 2
-        x: 0
+        x: 1
         y: 396
-        width: 16
+        width: 14
         height: 16
       alignment: 9
       pivot: {x: 0.5, y: 0.5}
@@ -763,9 +763,9 @@ TextureImporter:
       name: keyboard_w
       rect:
         serializedVersion: 2
-        x: 0
+        x: 1
         y: 414
-        width: 16
+        width: 14
         height: 16
       alignment: 9
       pivot: {x: 0.5, y: 0.5}
@@ -785,9 +785,9 @@ TextureImporter:
       name: keyboard_e
       rect:
         serializedVersion: 2
-        x: 0
+        x: 1
         y: 432
-        width: 16
+        width: 14
         height: 16
       alignment: 9
       pivot: {x: 0.5, y: 0.5}
@@ -807,9 +807,9 @@ TextureImporter:
       name: keyboard_r
       rect:
         serializedVersion: 2
-        x: 0
+        x: 1
         y: 450
-        width: 16
+        width: 14
         height: 16
       alignment: 9
       pivot: {x: 0.5, y: 0.5}
@@ -829,9 +829,9 @@ TextureImporter:
       name: keyboard_t
       rect:
         serializedVersion: 2
-        x: 0
+        x: 1
         y: 468
-        width: 16
+        width: 14
         height: 16
       alignment: 9
       pivot: {x: 0.5, y: 0.5}
@@ -851,9 +851,9 @@ TextureImporter:
       name: keyboard_y
       rect:
         serializedVersion: 2
-        x: 0
+        x: 1
         y: 486
-        width: 16
+        width: 14
         height: 16
       alignment: 9
       pivot: {x: 0.5, y: 0.5}
@@ -873,9 +873,9 @@ TextureImporter:
       name: keyboard_u
       rect:
         serializedVersion: 2
-        x: 0
+        x: 1
         y: 504
-        width: 16
+        width: 14
         height: 16
       alignment: 9
       pivot: {x: 0.5, y: 0.5}
@@ -895,9 +895,9 @@ TextureImporter:
       name: keyboard_i
       rect:
         serializedVersion: 2
-        x: 0
+        x: 1
         y: 522
-        width: 16
+        width: 14
         height: 16
       alignment: 9
       pivot: {x: 0.5, y: 0.5}
@@ -917,9 +917,9 @@ TextureImporter:
       name: keyboard_o
       rect:
         serializedVersion: 2
-        x: 0
+        x: 1
         y: 540
-        width: 16
+        width: 14
         height: 16
       alignment: 9
       pivot: {x: 0.5, y: 0.5}
@@ -939,9 +939,9 @@ TextureImporter:
       name: keyboard_p
       rect:
         serializedVersion: 2
-        x: 0
+        x: 1
         y: 558
-        width: 16
+        width: 14
         height: 16
       alignment: 9
       pivot: {x: 0.5, y: 0.5}
@@ -961,9 +961,9 @@ TextureImporter:
       name: keyboard_a
       rect:
         serializedVersion: 2
-        x: 0
+        x: 1
         y: 576
-        width: 16
+        width: 14
         height: 16
       alignment: 9
       pivot: {x: 0.5, y: 0.5}
@@ -983,9 +983,9 @@ TextureImporter:
       name: keyboard_s
       rect:
         serializedVersion: 2
-        x: 0
+        x: 1
         y: 594
-        width: 16
+        width: 14
         height: 16
       alignment: 9
       pivot: {x: 0.5, y: 0.5}
@@ -1005,9 +1005,9 @@ TextureImporter:
       name: keyboard_d
       rect:
         serializedVersion: 2
-        x: 0
+        x: 1
         y: 612
-        width: 16
+        width: 14
         height: 16
       alignment: 9
       pivot: {x: 0.5, y: 0.5}
@@ -1027,9 +1027,9 @@ TextureImporter:
       name: keyboard_f
       rect:
         serializedVersion: 2
-        x: 0
+        x: 1
         y: 630
-        width: 16
+        width: 14
         height: 16
       alignment: 9
       pivot: {x: 0.5, y: 0.5}
@@ -1049,9 +1049,9 @@ TextureImporter:
       name: keyboard_g
       rect:
         serializedVersion: 2
-        x: 0
+        x: 1
         y: 648
-        width: 16
+        width: 14
         height: 16
       alignment: 9
       pivot: {x: 0.5, y: 0.5}
@@ -1071,9 +1071,9 @@ TextureImporter:
       name: keyboard_h
       rect:
         serializedVersion: 2
-        x: 0
+        x: 1
         y: 666
-        width: 16
+        width: 14
         height: 16
       alignment: 9
       pivot: {x: 0.5, y: 0.5}
@@ -1093,9 +1093,9 @@ TextureImporter:
       name: keyboard_j
       rect:
         serializedVersion: 2
-        x: 0
+        x: 1
         y: 684
-        width: 16
+        width: 14
         height: 16
       alignment: 9
       pivot: {x: 0.5, y: 0.5}
@@ -1115,9 +1115,9 @@ TextureImporter:
       name: keyboard_k
       rect:
         serializedVersion: 2
-        x: 0
+        x: 1
         y: 702
-        width: 16
+        width: 14
         height: 16
       alignment: 9
       pivot: {x: 0.5, y: 0.5}
@@ -1137,9 +1137,9 @@ TextureImporter:
       name: keyboard_l
       rect:
         serializedVersion: 2
-        x: 0
+        x: 1
         y: 720
-        width: 16
+        width: 14
         height: 16
       alignment: 9
       pivot: {x: 0.5, y: 0.5}
@@ -1159,9 +1159,9 @@ TextureImporter:
       name: keyboard_z
       rect:
         serializedVersion: 2
-        x: 0
+        x: 1
         y: 738
-        width: 16
+        width: 14
         height: 16
       alignment: 9
       pivot: {x: 0.5, y: 0.5}
@@ -1181,9 +1181,9 @@ TextureImporter:
       name: keyboard_x
       rect:
         serializedVersion: 2
-        x: 0
+        x: 1
         y: 756
-        width: 16
+        width: 14
         height: 16
       alignment: 9
       pivot: {x: 0.5, y: 0.5}
@@ -1203,9 +1203,9 @@ TextureImporter:
       name: keyboard_c
       rect:
         serializedVersion: 2
-        x: 0
+        x: 1
         y: 774
-        width: 16
+        width: 14
         height: 16
       alignment: 9
       pivot: {x: 0.5, y: 0.5}
@@ -1225,9 +1225,9 @@ TextureImporter:
       name: keyboard_v
       rect:
         serializedVersion: 2
-        x: 0
+        x: 1
         y: 792
-        width: 16
+        width: 14
         height: 16
       alignment: 9
       pivot: {x: 0.5, y: 0.5}
@@ -1247,9 +1247,9 @@ TextureImporter:
       name: keyboard_b
       rect:
         serializedVersion: 2
-        x: 0
+        x: 1
         y: 810
-        width: 16
+        width: 14
         height: 16
       alignment: 9
       pivot: {x: 0.5, y: 0.5}
@@ -1269,9 +1269,9 @@ TextureImporter:
       name: keyboard_n
       rect:
         serializedVersion: 2
-        x: 0
+        x: 1
         y: 828
-        width: 16
+        width: 14
         height: 16
       alignment: 9
       pivot: {x: 0.5, y: 0.5}
@@ -1291,9 +1291,9 @@ TextureImporter:
       name: keyboard_m
       rect:
         serializedVersion: 2
-        x: 0
+        x: 1
         y: 846
-        width: 16
+        width: 14
         height: 16
       alignment: 9
       pivot: {x: 0.5, y: 0.5}

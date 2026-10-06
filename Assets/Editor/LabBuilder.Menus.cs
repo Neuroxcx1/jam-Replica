@@ -185,9 +185,9 @@ public static partial class LabBuilder
         rect.anchorMin = rect.anchorMax = new Vector2(0f, 0f);
         rect.pivot = new Vector2(0f, 1f);
         rect.anchoredPosition = new Vector2(0f, -4f);
-        rect.sizeDelta = new Vector2(150f, 16f);
+        rect.sizeDelta = new Vector2(150f, 16f * HintPixelSize);
         var layout = row.AddComponent<HorizontalLayoutGroup>();
-        layout.spacing = 6f;
+        layout.spacing = 8f;
         layout.childAlignment = TextAnchor.MiddleLeft;
         layout.childControlWidth = layout.childControlHeight = false;
         layout.childForceExpandWidth = layout.childForceExpandHeight = false;
@@ -201,6 +201,7 @@ public static partial class LabBuilder
             SetRef(hint, "icon", icon);
             var so = new SerializedObject(hint);
             so.FindProperty("control").enumValueIndex = (int)control;
+            so.FindProperty("pixelSize").floatValue = HintPixelSize;
             so.ApplyModifiedPropertiesWithoutUndo();
         }
 
@@ -208,6 +209,9 @@ public static partial class LabBuilder
         PrefabUtility.UnloadPrefabContents(hud);
         Debug.Log("Botones de las replicas en " + HudPath);
     }
+
+    // lo que mide en el HUD cada pixel de las teclas (16 px de alto)
+    const float HintPixelSize = 1.5f;
 
     // ---------- sonidos de la intro ----------
 
