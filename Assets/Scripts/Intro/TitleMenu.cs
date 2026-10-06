@@ -31,7 +31,7 @@ public class TitleMenu : MonoBehaviour
         {
             group.interactable = true;
             group.alpha = 1f;
-            EventSystem.current.SetSelectedGameObject(optionsButton.gameObject);
+            GameMenus.Instance.Select(optionsButton);
         });
     }
 

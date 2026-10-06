@@ -12,13 +12,22 @@ using UnityEngine.UI;
 // Es el prefab Resources/Menus: se crea solo al empezar el juego y sigue entre escenas, no hay que ponerlo en ninguna.
 // Los volumenes van al mezclador Sounds/Mezclador (grupos Master, Musica y Efectos) y se guardan para la proxima vez.
 // La musica (Music Source) suena por el grupo Musica; los sonidos de los prefabs van por Efectos.
+// Sonidos de los menus: Move al cambiar de opcion (o pasar el raton), Select al elegir y Back al volver.
 public class GameMenus : MonoBehaviour
 {
     public static GameMenus Instance { get; private set; }
     public static bool Paused { get; private set; }
 
+    public enum UiSound { Move, Select, Back }
+
     [SerializeField] AudioMixer mixer;
     [SerializeField] AudioSource musicSource;
+
+    [Header("Sonidos de los menus")]
+    [SerializeField] AudioSource uiSource;
+    [SerializeField] AudioClip moveSound;
+    [SerializeField] AudioClip selectSound;
+    [SerializeField] AudioClip backSound;
 
     [Header("Pausa")]
     [SerializeField] GameObject background;
@@ -38,6 +47,8 @@ public class GameMenus : MonoBehaviour
     [SerializeField] Button backButton;
 
     Action onOptionsClosed;
+    GameObject lastSelected;
+    float lastMoveSound;
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
     static void ResetStatics()
@@ -90,13 +101,26 @@ public class GameMenus : MonoBehaviour
 
         if (optionsPanel.activeSelf)
         {
-            if (back) CloseOptions();
+            if (back) CloseWithSound();
         }
         else if (Paused)
         {
-            if (back) Resume();
+            if (back)
+            {
+                PlayUi(UiSound.Back);
+                Resume();
+            }
         }
-        else if (pause && CanPause()) Pause();
+        else if (pause && CanPause())
+        {
+            PlayUi(UiSound.Select);
+            Pause();
+        }
+
+        // al cambiar de opcion (con teclado, mando o raton) suena Move
+        GameObject selected = EventSystem.current != null ? EventSystem.current.currentSelectedGameObject : null;
+        if (selected != lastSelected && selected != null && lastSelected != null) PlayUi(UiSound.Move);
+        lastSelected = selected;
 
         // por si algo (la pausa del golpe al morir) devuelve el tiempo mientras esta el menu
         if (Paused) Time.timeScale = 0f;
@@ -132,6 +156,12 @@ public class GameMenus : MonoBehaviour
         Select(master);
     }
 
+    void CloseWithSound()
+    {
+        PlayUi(UiSound.Back);
+        CloseOptions();
+    }
+
     void CloseOptions()
     {
         Show(Paused ? pausePanel : null);
@@ -152,11 +182,20 @@ public class GameMenus : MonoBehaviour
         background.SetActive(panel != null);
     }
 
-    static void Select(Selectable selectable)
+    // elige una opcion sin que suene Move (al abrir un menu o al volver a el)
+    public void Select(Selectable selectable)
     {
         if (EventSystem.current == null)
             new GameObject("EventSystem", typeof(EventSystem), typeof(InputSystemUIInputModule));
         EventSystem.current.SetSelectedGameObject(selectable.gameObject);
+        lastSelected = selectable.gameObject;
+    }
+
+    public void PlayUi(UiSound sound)
+    {
+        AudioClip clip = sound == UiSound.Move ? moveSound : sound == UiSound.Select ? selectSound : backSound;
+        // el de moverse mas bajo: suena mucho
+        if (clip != null) uiSource.PlayOneShot(clip, sound == UiSound.Move ? 0.4f : 0.7f);
     }
 
     // cada barra guarda su volumen (de 0 a 1) y lo pone en el mezclador. El parametro se llama como el grupo
@@ -166,6 +205,12 @@ public class GameMenus : MonoBehaviour
         value.text = Mathf.RoundToInt(slider.value * 100f) + "%";
         slider.onValueChanged.AddListener(v =>
         {
+            // un toque al moverla, sin que al arrastrar con el raton suene sin parar
+            if (Time.unscaledTime - lastMoveSound > 0.08f)
+            {
+                lastMoveSound = Time.unscaledTime;
+                PlayUi(UiSound.Move);
+            }
             PlayerPrefs.SetFloat("Volumen" + group, v);
             SetVolume(group, v);
             value.text = Mathf.RoundToInt(v * 100f) + "%";

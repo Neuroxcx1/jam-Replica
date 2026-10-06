@@ -6,7 +6,8 @@ using UnityEngine.Audio;
 using UnityEngine.UI;
 
 // Replica > Crear menus de pausa y opciones: el prefab Resources/Menus (GameMenus), con el mismo estilo que el menu
-// del principio. Replica > Botones de las replicas en el HUD: los recordatorios de Shift, Ctrl y Q debajo del contador.
+// del principio. Replica > Botones de las replicas en el HUD: las teclas de Shift, Ctrl y Q debajo del contador.
+// Replica > Poner sonidos de la intro: crea los sonidos combinados (Sounds/Combinados) y los pone en la escena Intro.
 public static partial class LabBuilder
 {
     const string MenusPath = "Assets/Resources/Menus.prefab";
@@ -41,6 +42,9 @@ public static partial class LabBuilder
         music.outputAudioMixerGroup = MixerGroup("Musica");
         music.loop = true;
         music.playOnAwake = false;
+        var ui = go.AddComponent<AudioSource>();
+        ui.outputAudioMixerGroup = MixerGroup("Efectos");
+        ui.playOnAwake = false;
 
         Image background = UiBox(go.transform, "Fondo", new Color(0f, 0f, 0f, 0.7f));
         Stretch(background.rectTransform);
@@ -63,9 +67,17 @@ public static partial class LabBuilder
         Button back = MenuButton(optionsPanel, "VOLVER", new Vector2(160f, -240f), font);
         MenuText(optionsPanel, "Ayuda", "IZQUIERDA / DERECHA  VOLUMEN     ESC / B  VOLVER", 24, new Vector2(164f, -400f), new Color(1f, 1f, 1f, 0.4f), font);
 
+        // al pulsar suena Select; en las que vuelven atras, Back
+        foreach (Selectable option in go.GetComponentsInChildren<Selectable>(true))
+            SetBool(option.gameObject.AddComponent<MenuSound>(), "back", option == resume || option == back);
+
         var menus = go.AddComponent<GameMenus>();
         SetRef(menus, "mixer", AssetDatabase.LoadAssetAtPath<AudioMixer>(MixerPath));
         SetRef(menus, "musicSource", music);
+        SetRef(menus, "uiSource", ui);
+        SetRef(menus, "moveSound", AssetDatabase.LoadAssetAtPath<AudioClip>("Assets/Sounds/Interface/Holder.ogg"));
+        SetRef(menus, "selectSound", AssetDatabase.LoadAssetAtPath<AudioClip>("Assets/Sounds/Interface/Select.ogg"));
+        SetRef(menus, "backSound", AssetDatabase.LoadAssetAtPath<AudioClip>("Assets/Sounds/Interface/Back.ogg"));
         SetRef(menus, "background", background.gameObject);
         SetRef(menus, "pausePanel", pause.gameObject);
         SetRef(menus, "resumeButton", resume);
@@ -122,6 +134,13 @@ public static partial class LabBuilder
         return (slider, value);
     }
 
+    static void SetBool(Object target, string field, bool value)
+    {
+        var so = new SerializedObject(target);
+        so.FindProperty(field).boolValue = value;
+        so.ApplyModifiedPropertiesWithoutUndo();
+    }
+
     static Image UiBox(Transform parent, string name, Color color)
     {
         var go = new GameObject(name, typeof(RectTransform));
@@ -148,57 +167,40 @@ public static partial class LabBuilder
 
     // ---------- HUD ----------
 
-    // debajo del contador de replicas: que tecla (o boton) lanza, congela y recupera. Cambian solas al coger el mando
+    // debajo del recuadro del contador de replicas, pegadas a el: las teclas (o botones) de lanzar, congelar y recuperar.
+    // Solo los iconos; cambian solos al coger el mando
     [MenuItem("Replica/Botones de las replicas en el HUD")]
     static void AddReplicaHints()
     {
-        TMP_FontAsset font = AssetDatabase.LoadAssetAtPath<TMP_FontAsset>(MenuFontPath);
         var icons = AssetDatabase.LoadAssetAtPath<ControlIcons>(ControlIconsAssetPath);
         GameObject hud = PrefabUtility.LoadPrefabContents(HudPath);
-        Transform counter = hud.GetComponentsInChildren<Transform>(true).First(t => t.name == "ReplicaContador");
-        Transform old = counter.parent.Find("Controles de replicas");
-        if (old != null) Object.DestroyImmediate(old.gameObject);
+        Transform panel = hud.GetComponentsInChildren<Transform>(true).First(t => t.name == "Window" && t.parent.name == "ReplicaContador");
+        foreach (Transform t in hud.GetComponentsInChildren<Transform>(true).Where(t => t.name == "Controles de replicas").ToArray())
+            Object.DestroyImmediate(t.gameObject);
 
-        var group = new GameObject("Controles de replicas", typeof(RectTransform));
-        group.transform.SetParent(counter.parent, false);
-        var rect = (RectTransform)group.transform;
-        rect.anchorMin = rect.anchorMax = rect.pivot = new Vector2(0f, 1f);
-        rect.anchoredPosition = HintsPosition;
-        rect.sizeDelta = new Vector2(200f, 60f);
+        var row = new GameObject("Controles de replicas", typeof(RectTransform));
+        row.transform.SetParent(panel, false);
+        row.AddComponent<LayoutElement>().ignoreLayout = true;
+        var rect = (RectTransform)row.transform;
+        rect.anchorMin = rect.anchorMax = new Vector2(0f, 0f);
+        rect.pivot = new Vector2(0f, 1f);
+        rect.anchoredPosition = new Vector2(0f, -4f);
+        rect.sizeDelta = new Vector2(150f, 16f);
+        var layout = row.AddComponent<HorizontalLayoutGroup>();
+        layout.spacing = 6f;
+        layout.childAlignment = TextAnchor.MiddleLeft;
+        layout.childControlWidth = layout.childControlHeight = false;
+        layout.childForceExpandWidth = layout.childForceExpandHeight = false;
 
-        var rows = new[] { (Sign.Control.LanzarClon, "LANZAR"), (Sign.Control.Congelar, "CONGELAR"), (Sign.Control.Recuperar, "RECUPERAR") };
-        for (int i = 0; i < rows.Length; i++)
+        foreach (var (control, name) in new[] { (Sign.Control.LanzarClon, "Lanzar"), (Sign.Control.Congelar, "Congelar"), (Sign.Control.Recuperar, "Recuperar") })
         {
-            var row = new GameObject("Control " + rows[i].Item2, typeof(RectTransform));
-            row.transform.SetParent(group.transform, false);
-            var rowRect = (RectTransform)row.transform;
-            rowRect.anchorMin = rowRect.anchorMax = rowRect.pivot = new Vector2(0f, 1f);
-            rowRect.anchoredPosition = new Vector2(0f, -i * HintRowHeight);
-            rowRect.sizeDelta = new Vector2(200f, HintRowHeight);
-
-            Image icon = UiBox(row.transform, "Icono", Color.white);
-            icon.rectTransform.anchorMin = icon.rectTransform.anchorMax = icon.rectTransform.pivot = new Vector2(0f, 0.5f);
-            icon.preserveAspect = true;
-
-            var text = new GameObject("Texto", typeof(RectTransform));
-            text.transform.SetParent(row.transform, false);
-            var textRect = (RectTransform)text.transform;
-            textRect.anchorMin = textRect.anchorMax = textRect.pivot = new Vector2(0f, 0.5f);
-            textRect.anchoredPosition = new Vector2(HintLabelX, 0f);
-            textRect.sizeDelta = new Vector2(150f, HintRowHeight);
-            var label = text.AddComponent<TextMeshProUGUI>();
-            label.font = font;
-            label.fontSize = HintFontSize;
-            label.text = rows[i].Item2;
-            label.alignment = TextAlignmentOptions.MidlineLeft;
-            label.color = new Color(1f, 1f, 1f, 0.85f);
-
-            var hint = row.AddComponent<ControlHint>();
+            Image icon = UiBox(row.transform, "Tecla " + name, Color.white);
+            icon.raycastTarget = false;
+            var hint = icon.gameObject.AddComponent<ControlHint>();
             SetRef(hint, "icons", icons);
             SetRef(hint, "icon", icon);
             var so = new SerializedObject(hint);
-            so.FindProperty("control").enumValueIndex = (int)rows[i].Item1;
-            so.FindProperty("pixelSize").floatValue = HintPixelSize;
+            so.FindProperty("control").enumValueIndex = (int)control;
             so.ApplyModifiedPropertiesWithoutUndo();
         }
 
@@ -207,11 +209,125 @@ public static partial class LabBuilder
         Debug.Log("Botones de las replicas en " + HudPath);
     }
 
-    // medidas en el canvas del HUD (1045 x 554): debajo del recuadro del contador, alineados con su borde.
-    // Los textos en columna, despues de la tecla mas ancha (Shift y Ctrl, 32 px)
-    static readonly Vector2 HintsPosition = new Vector2(78f, -84f);
-    const float HintLabelX = 38f;
-    const float HintRowHeight = 18f;
-    const float HintPixelSize = 1f;
-    const float HintFontSize = 10f;
+    // ---------- sonidos de la intro ----------
+
+    const string MixesFolder = "Assets/Sounds/Combinados";
+
+    static AudioClip Clip(string name) => AssetDatabase.FindAssets(name + " t:AudioClip", new[] { "Assets/Sounds" })
+        .Select(g => AssetDatabase.LoadAssetAtPath<AudioClip>(AssetDatabase.GUIDToAssetPath(g))).FirstOrDefault(c => c.name == name);
+
+    // una capa: sonido, retraso, volumen, tono, desde donde empieza, cuanto suena (0 = entero) y lo que tarda en apagarse
+    static (string, float, float, float, float, float, float) L(string clip, float delay, float volume, float pitch = 1f, float start = 0f, float length = 0f, float fade = 0.2f)
+        => (clip, delay, volume, pitch, start, length, fade);
+
+    // crea (o rehace) un sonido combinado en Sounds/Combinados
+    static SoundMix Mix(string name, float volume, params (string clip, float delay, float volume, float pitch, float start, float length, float fade)[] layers)
+    {
+        if (!AssetDatabase.IsValidFolder(MixesFolder)) AssetDatabase.CreateFolder("Assets/Sounds", "Combinados");
+        string path = $"{MixesFolder}/{name}.asset";
+        var mix = AssetDatabase.LoadAssetAtPath<SoundMix>(path);
+        if (mix == null)
+        {
+            mix = ScriptableObject.CreateInstance<SoundMix>();
+            AssetDatabase.CreateAsset(mix, path);
+        }
+        var so = new SerializedObject(mix);
+        so.FindProperty("output").objectReferenceValue = MixerGroup("Efectos");
+        so.FindProperty("volume").floatValue = volume;
+        SerializedProperty list = so.FindProperty("layers");
+        list.arraySize = layers.Length;
+        for (int i = 0; i < layers.Length; i++)
+        {
+            SerializedProperty layer = list.GetArrayElementAtIndex(i);
+            layer.FindPropertyRelative("clip").objectReferenceValue = Clip(layers[i].clip);
+            layer.FindPropertyRelative("delay").floatValue = layers[i].delay;
+            layer.FindPropertyRelative("volume").floatValue = layers[i].volume;
+            layer.FindPropertyRelative("pitch").floatValue = layers[i].pitch;
+            layer.FindPropertyRelative("start").floatValue = layers[i].start;
+            layer.FindPropertyRelative("length").floatValue = layers[i].length;
+            layer.FindPropertyRelative("fadeOut").floatValue = layers[i].fade;
+        }
+        so.ApplyModifiedPropertiesWithoutUndo();
+        EditorUtility.SetDirty(mix);
+        return mix;
+    }
+
+    static AudioSource Loop(Transform parent, string name, string clip, float volume, bool playNow)
+    {
+        var go = new GameObject(name);
+        go.transform.SetParent(parent, false);
+        var source = go.AddComponent<AudioSource>();
+        source.clip = Clip(clip);
+        source.outputAudioMixerGroup = MixerGroup("Efectos");
+        source.loop = true;
+        source.volume = volume;
+        source.playOnAwake = playNow;
+        return source;
+    }
+
+    // en la escena Intro abierta: el ambiente y las voces del menu, el temblor, la ventana, el tanque, los gritos
+    // y los sonidos de las opciones del menu del principio
+    [MenuItem("Replica/Poner sonidos de la intro")]
+    static void AddIntroSounds()
+    {
+        var intro = Object.FindAnyObjectByType<IntroCinematic>(FindObjectsInactive.Include);
+        if (intro == null)
+        {
+            Debug.LogError("Abre la escena Intro");
+            return;
+        }
+
+        // el vidrio: los tres sonidos encima unos de otros, con trocitos que caen despues
+        SoundMix windowCrack = Mix("Ventana rajada", 0.8f, L("Vidrio 3", 0f, 0.5f, 1.35f, 0f, 0.3f, 0.1f), L("Vidrio 2", 0.05f, 0.3f, 1.6f));
+        SoundMix windowShatter = Mix("Vidrio fuerte", 0.9f,
+            L("Vidrio_1", 0f, 1f, 1f, 0.25f), L("Vidrio 3", 0.02f, 0.9f, 0.95f), L("Vidrio 2", 0.06f, 0.8f, 1.1f),
+            L("Vidrio 3", 0.18f, 0.45f, 1.3f), L("Vidrio 2", 0.32f, 0.35f, 1.5f));
+        // el tanque con los mismos, pero mas grave, en otro orden y con el liquido saliendo: no suena igual que la ventana
+        SoundMix tankCrack = Mix("Tanque rajado", 0.8f, L("Vidrio 2", 0f, 0.45f, 0.8f), L("Vidrio 3", 0.04f, 0.25f, 0.7f, 0f, 0.3f, 0.15f));
+        SoundMix tankBreak = Mix("Tanque roto", 0.9f,
+            L("Vidrio 3", 0f, 1f, 0.72f), L("Vidrio_1", 0.04f, 0.9f, 0.8f, 0.25f), L("Vidrio 2", 0.12f, 0.7f, 0.85f),
+            L("Vidrio 2", 0.35f, 0.3f, 1f), L("Sonido de tanque de agua", 0f, 0.7f, 0.8f, 0f, 1.4f, 0.9f));
+        // los dos temblores juntos: el segundo entra un poco despues y mas grave; suenan lo que dura el temblor y se apagan
+        SoundMix quake = Mix("Temblor", 1f, L("Temblor 1", 0f, 0.3f, 1f, 0f, 3.4f, 1.2f), L("Tembloe 2", 0.4f, 0.35f, 0.9f, 5f, 3.2f, 1.5f));
+        // los gritos son largos: solo el primer segundo y se apagan
+        SoundMix[] screams =
+        {
+            Mix("Grito 1", 1f, L("Gritos 1", 0f, 0.35f, 1f, 0f, 1f, 0.35f)),
+            Mix("Grito 2", 1f, L("Gritos 2", 0f, 0.35f, 1.05f, 0.09f, 1f, 0.35f)),
+            Mix("Grito 3", 1f, L("Gritos 3", 0f, 0.55f, 0.95f, 0.26f, 1.2f, 0.4f)),
+        };
+        AssetDatabase.SaveAssets();
+
+        // la sala: ambiente y voces desde el menu; el zumbido de emergencia cuando vuelve la corriente
+        Transform old = intro.transform.Find("Sonido de la sala");
+        if (old != null) Object.DestroyImmediate(old.gameObject);
+        var room = new GameObject("Sonido de la sala").transform;
+        room.SetParent(intro.transform, false);
+        SetRef(intro, "ambience", Loop(room, "Ambiente", "Sonido ambiente 2", 0.25f, true));
+        SetArray(intro, "voices", new[] { Loop(room, "Voces", "Voces", 1f, true), Loop(room, "Voces 2", "Voces 2", 1f, true) });
+        SetRef(intro, "emergencyAmbience", Loop(room, "Corriente de emergencia", "Sonido ambiente 1", 0.7f, false));
+        SetRef(intro, "quakeSound", quake);
+
+        var window = Object.FindAnyObjectByType<ObservationWindow>(FindObjectsInactive.Include);
+        SetRef(window, "crackSound", windowCrack);
+        SetRef(window, "shatterSound", windowShatter);
+        var tank = Object.FindAnyObjectByType<SpecimenTank>(FindObjectsInactive.Include);
+        SetRef(tank, "crackSound", tankCrack);
+        SetRef(tank, "breakSound", tankBreak);
+
+        // un grito por cientifico (los tres primeros que huyen; mas a la vez sonaria raro)
+        var scientists = new SerializedObject(intro).FindProperty("scientists");
+        for (int i = 0; i < scientists.arraySize; i++)
+        {
+            var scientist = (Scientist)scientists.GetArrayElementAtIndex(i).objectReferenceValue;
+            if (scientist != null) SetRef(scientist, "scream", i < screams.Length ? screams[i] : null);
+        }
+
+        var title = Object.FindAnyObjectByType<TitleMenu>(FindObjectsInactive.Include);
+        foreach (Selectable option in title.GetComponentsInChildren<Selectable>(true))
+            if (option.GetComponent<MenuSound>() == null) option.gameObject.AddComponent<MenuSound>();
+
+        UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(intro.gameObject.scene);
+        Debug.Log("Sonidos de la intro puestos");
+    }
 }
