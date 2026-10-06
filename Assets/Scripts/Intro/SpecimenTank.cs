@@ -9,6 +9,7 @@ public class SpecimenTank : MonoBehaviour
     [SerializeField] Sprite broken;
     [SerializeField] SpriteRenderer liquid;
     [SerializeField] ParticleSystem bubbles;
+    [SerializeField] AudioSource bubbleSound;
     [SerializeField] ParticleSystem shards;
     [SerializeField] ParticleSystem splash;
     [SerializeField] Light2D glow;
@@ -25,6 +26,7 @@ public class SpecimenTank : MonoBehaviour
         glass.sprite = broken;
         liquid.enabled = false;
         bubbles.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+        if (bubbleSound != null) bubbleSound.Stop();
         glow.intensity *= 0.35f;
         if (quiet) return;
 

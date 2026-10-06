@@ -59,6 +59,9 @@ public class IntroCinematic : MonoBehaviour
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
     static void ResetSeen() => seen = false;
 
+    // al volver al menu principal desde la pausa: otra vez el menu y la cinematica
+    public static void ShowMenuAgain() => seen = false;
+
     void Start()
     {
         cam = pixelCamera.GetComponent<Camera>();

@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
-using UnityEngine.InputSystem;
 
 // Cartel de papel con texto que se escribe en el Inspector (titulo y hasta 5 filas). Cada fila lleva un control del
 // jugador y un texto corto al lado ("RECUPERAR CLON"): se dibujan las teclas que tenga asignadas ahora mismo, del teclado
@@ -41,119 +40,23 @@ public class Sign : MonoBehaviour
     [SerializeField] TMP_Text[] texts;          // una por fila
     [SerializeField] SpriteRenderer[] keys;     // dos por fila
 
-    static bool gamepad;
-    static int checkedFrame = -1;
     string shown;
-
-    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
-    static void ResetDevice() => gamepad = false;
 
     void Update()
     {
-        if (Application.isPlaying) CheckDevice();
+        if (Application.isPlaying) ControlIcons.CheckDevice();
 
         // solo se vuelve a montar si cambia el texto o las teclas que tocan
         var rowIcons = new List<Sprite>[Mathf.Min(rows.Length, texts.Length)];
         string now = title;
         for (int i = 0; i < rowIcons.Length; i++)
         {
-            rowIcons[i] = Icons(rows[i].control);
+            rowIcons[i] = icons != null ? icons.For(rows[i].control) : new List<Sprite>();
             now += "|" + rows[i].text + string.Join(",", rowIcons[i].ConvertAll(s => s != null ? s.name : "-"));
         }
         if (now == shown) return;
         shown = now;
         Build(rowIcons);
-    }
-
-    // el ultimo dispositivo con el que se ha tocado algo (una vez por fotograma para todos los carteles)
-    static void CheckDevice()
-    {
-        if (checkedFrame == Time.frameCount) return;
-        checkedFrame = Time.frameCount;
-        if (Keyboard.current != null && Keyboard.current.anyKey.wasPressedThisFrame) gamepad = false;
-        Gamepad pad = Gamepad.current;
-        if (pad == null) return;
-        foreach (var button in new[] { pad.buttonSouth, pad.buttonNorth, pad.buttonEast, pad.buttonWest, pad.leftShoulder,
-                                       pad.rightShoulder, pad.startButton, pad.selectButton })
-            if (button.wasPressedThisFrame) gamepad = true;
-        if (pad.leftStick.ReadValue().magnitude > 0.5f || pad.dpad.ReadValue().magnitude > 0.5f) gamepad = true;
-    }
-
-    List<Sprite> Icons(Control control)
-    {
-        var found = new List<Sprite>();
-        if (control == Control.Ninguno || icons == null) return found;
-        foreach (string path in Paths(ActionName(control), gamepad)) found.Add(icons.Find(IconName(path)));
-        return found;
-    }
-
-    static string ActionName(Control control) => control switch
-    {
-        Control.Moverse => "Move",
-        Control.Saltar => "Jump",
-        Control.LanzarClon => "Replicate",
-        Control.Congelar => "Freeze",
-        Control.Recuperar => "Recall",
-        _ => "Restart",
-    };
-
-    // las teclas asignadas ahora mismo a la accion. De Moverse, la de izquierda y la de derecha (el juego es de lado)
-    static List<string> Paths(string actionName, bool gamepad)
-    {
-        var paths = new List<string>();
-        InputAction action = InputSystem.actions != null ? InputSystem.actions.FindAction(actionName) : null;
-        if (action == null) return paths;
-        string device = gamepad ? "<Gamepad>" : "<Keyboard>";
-        string left = null, right = null;
-        foreach (InputBinding binding in action.bindings)
-        {
-            string path = binding.effectivePath;
-            if (string.IsNullOrEmpty(path) || !path.StartsWith(device)) continue;
-            if (!binding.isPartOfComposite)
-            {
-                paths.Add(path);
-                return paths;
-            }
-            if (binding.name == "left" && left == null) left = path;
-            if (binding.name == "right" && right == null) right = path;
-        }
-        if (left != null) paths.Add(left);
-        if (right != null) paths.Add(right);
-        return paths;
-    }
-
-    // de "<Keyboard>/space" a "keyboard_space", de "<Gamepad>/buttonSouth" a "xbox_a"
-    static string IconName(string path)
-    {
-        string control = path.Substring(path.IndexOf('/') + 1);
-        if (path.StartsWith("<Gamepad>"))
-            return "xbox_" + control switch
-            {
-                "buttonSouth" => "a",
-                "buttonEast" => "b",
-                "buttonWest" => "x",
-                "buttonNorth" => "y",
-                "leftShoulder" => "lb",
-                "rightShoulder" => "rb",
-                "leftTrigger" => "lt",
-                "rightTrigger" => "rt",
-                "select" => "view",
-                "start" => "menu",
-                "leftStick" => "stick_l",
-                "rightStick" => "stick_r",
-                _ => control.ToLower(),
-            };
-        return "keyboard_" + control.ToLower() switch
-        {
-            "leftarrow" => "arrow_left",
-            "rightarrow" => "arrow_right",
-            "uparrow" => "arrow_up",
-            "downarrow" => "arrow_down",
-            "leftshift" or "rightshift" => "shift",
-            "leftctrl" or "rightctrl" => "ctrl",
-            "leftalt" or "rightalt" => "alt",
-            var key => key,
-        };
     }
 
     void Build(List<Sprite>[] rowIcons)

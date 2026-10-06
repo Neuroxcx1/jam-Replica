@@ -1,0 +1,179 @@
+using System;
+using TMPro;
+using UnityEngine;
+using UnityEngine.Audio;
+using UnityEngine.EventSystems;
+using UnityEngine.InputSystem;
+using UnityEngine.InputSystem.UI;
+using UnityEngine.SceneManagement;
+using UnityEngine.UI;
+
+// Menu de pausa (Esc o Start del mando) y de opciones (volumen general, de la musica y de los efectos).
+// Es el prefab Resources/Menus: se crea solo al empezar el juego y sigue entre escenas, no hay que ponerlo en ninguna.
+// Los volumenes van al mezclador Sounds/Mezclador (grupos Master, Musica y Efectos) y se guardan para la proxima vez.
+// La musica (Music Source) suena por el grupo Musica; los sonidos de los prefabs van por Efectos.
+public class GameMenus : MonoBehaviour
+{
+    public static GameMenus Instance { get; private set; }
+    public static bool Paused { get; private set; }
+
+    [SerializeField] AudioMixer mixer;
+    [SerializeField] AudioSource musicSource;
+
+    [Header("Pausa")]
+    [SerializeField] GameObject background;
+    [SerializeField] GameObject pausePanel;
+    [SerializeField] Button resumeButton;
+    [SerializeField] Button optionsButton;
+    [SerializeField] Button menuButton;
+
+    [Header("Opciones")]
+    [SerializeField] GameObject optionsPanel;
+    [SerializeField] Slider master;
+    [SerializeField] Slider music;
+    [SerializeField] Slider effects;
+    [SerializeField] TMP_Text masterValue;
+    [SerializeField] TMP_Text musicValue;
+    [SerializeField] TMP_Text effectsValue;
+    [SerializeField] Button backButton;
+
+    Action onOptionsClosed;
+
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+    static void ResetStatics()
+    {
+        Instance = null;
+        Paused = false;
+    }
+
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
+    static void Create()
+    {
+        var prefab = Resources.Load<GameMenus>("Menus");
+        if (Instance == null && prefab != null) Instantiate(prefab);
+    }
+
+    void Awake()
+    {
+        if (Instance != null)
+        {
+            Destroy(gameObject);
+            return;
+        }
+        Instance = this;
+        DontDestroyOnLoad(gameObject);
+
+        resumeButton.onClick.AddListener(Resume);
+        optionsButton.onClick.AddListener(() => OpenOptions(() => Select(optionsButton)));
+        menuButton.onClick.AddListener(ToMainMenu);
+        backButton.onClick.AddListener(CloseOptions);
+        Setup(master, masterValue, "Master");
+        Setup(music, musicValue, "Musica");
+        Setup(effects, effectsValue, "Efectos");
+        Show(null);
+    }
+
+    void Start()
+    {
+        // el mezclador no hace caso a SetFloat en Awake
+        SetVolume("Master", master.value);
+        SetVolume("Musica", music.value);
+        SetVolume("Efectos", effects.value);
+        if (musicSource.clip != null) musicSource.Play();
+    }
+
+    void Update()
+    {
+        bool pause = (Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame)
+                     || (Gamepad.current != null && Gamepad.current.startButton.wasPressedThisFrame);
+        bool back = pause || (Gamepad.current != null && Gamepad.current.buttonEast.wasPressedThisFrame);
+
+        if (optionsPanel.activeSelf)
+        {
+            if (back) CloseOptions();
+        }
+        else if (Paused)
+        {
+            if (back) Resume();
+        }
+        else if (pause && CanPause()) Pause();
+
+        // por si algo (la pausa del golpe al morir) devuelve el tiempo mientras esta el menu
+        if (Paused) Time.timeScale = 0f;
+    }
+
+    // solo jugando: no en el menu del principio, ni en la cinematica, ni con el panel de victoria
+    static bool CanPause()
+    {
+        Player player = FindAnyObjectByType<Player>();
+        return player != null && player.enabled;
+    }
+
+    void Pause()
+    {
+        Paused = true;
+        Time.timeScale = 0f;
+        Show(pausePanel);
+        Select(resumeButton);
+    }
+
+    void Resume()
+    {
+        Paused = false;
+        Time.timeScale = 1f;
+        Show(null);
+    }
+
+    // tambien lo abre el menu del principio; al cerrarlo se llama a onClosed
+    public void OpenOptions(Action onClosed)
+    {
+        onOptionsClosed = onClosed;
+        Show(optionsPanel);
+        Select(master);
+    }
+
+    void CloseOptions()
+    {
+        Show(Paused ? pausePanel : null);
+        onOptionsClosed?.Invoke();
+    }
+
+    void ToMainMenu()
+    {
+        Resume();
+        IntroCinematic.ShowMenuAgain();
+        SceneManager.LoadScene("Intro");
+    }
+
+    void Show(GameObject panel)
+    {
+        pausePanel.SetActive(panel == pausePanel);
+        optionsPanel.SetActive(panel == optionsPanel);
+        background.SetActive(panel != null);
+    }
+
+    static void Select(Selectable selectable)
+    {
+        if (EventSystem.current == null)
+            new GameObject("EventSystem", typeof(EventSystem), typeof(InputSystemUIInputModule));
+        EventSystem.current.SetSelectedGameObject(selectable.gameObject);
+    }
+
+    // cada barra guarda su volumen (de 0 a 1) y lo pone en el mezclador. El parametro se llama como el grupo
+    void Setup(Slider slider, TMP_Text value, string group)
+    {
+        slider.value = PlayerPrefs.GetFloat("Volumen" + group, 1f);
+        value.text = Mathf.RoundToInt(slider.value * 100f) + "%";
+        slider.onValueChanged.AddListener(v =>
+        {
+            PlayerPrefs.SetFloat("Volumen" + group, v);
+            SetVolume(group, v);
+            value.text = Mathf.RoundToInt(v * 100f) + "%";
+        });
+    }
+
+    void SetVolume(string group, float volume)
+    {
+        mixer.SetFloat(group, volume > 0.001f ? Mathf.Log10(volume) * 20f : -80f);
+    }
+}

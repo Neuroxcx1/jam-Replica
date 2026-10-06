@@ -94,6 +94,8 @@ public class Player : MonoBehaviour
 
     void Update()
     {
+        if (GameMenus.Paused) return;
+
         // K: reinicia el nivel entero
         if (restartAction.WasPressedThisFrame())
         {
@@ -191,6 +193,7 @@ public class Player : MonoBehaviour
         ReplicasLeft--;
         GameObject body = Instantiate(bodyPrefab, at, Quaternion.identity);
         body.GetComponent<Rigidbody2D>().bodyType = RigidbodyType2D.Static;
+        body.GetComponent<Body>().Frozen = true;
         if (freezeEffect != null) Instantiate(freezeEffect, at, Quaternion.identity).Attach(body);
         placed.Add(body);
 
@@ -218,11 +221,16 @@ public class Player : MonoBehaviour
         placed.RemoveAll(piece => piece == null);
         if (placed.Count == 0) return;
 
-        GameObject oldest = placed[0];
-        placed.RemoveAt(0);
-        if (recallEffect != null) Instantiate(recallEffect, oldest.transform.position, Quaternion.identity);
-        if (recallGhost != null) Instantiate(recallGhost).Fly(oldest.GetComponentInChildren<SpriteRenderer>(), transform);
-        Destroy(oldest);
+        Return(placed[0]);
+    }
+
+    // esa copia vuelve como replica (con Q la mas antigua; el montacargas devuelve el hielo que rompe)
+    public void Return(GameObject piece)
+    {
+        if (!placed.Remove(piece)) return;
+        if (recallEffect != null) Instantiate(recallEffect, piece.transform.position, Quaternion.identity);
+        if (recallGhost != null) Instantiate(recallGhost).Fly(piece.GetComponentInChildren<SpriteRenderer>(), transform);
+        Destroy(piece);
         ReplicasLeft = Mathf.Min(maxReplicas, ReplicasLeft + 1);
     }
 

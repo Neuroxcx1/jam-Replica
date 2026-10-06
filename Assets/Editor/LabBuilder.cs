@@ -382,13 +382,15 @@ public static partial class LabBuilder
         // tamaños multiplos de 8 (la letra es pixel art de 8): asi se ve nitida
         MenuText(go.transform, "Titulo", "REPLICA", 96, new Vector2(160f, 160f), Color.white, font);
         Button start = MenuButton(go.transform, "INICIAR", new Vector2(160f, -16f), font);
-        Button quit = MenuButton(go.transform, "SALIR", new Vector2(160f, -88f), font);
+        Button options = MenuButton(go.transform, "OPCIONES", new Vector2(160f, -88f), font);
+        Button quit = MenuButton(go.transform, "SALIR", new Vector2(160f, -160f), font);
         MenuText(go.transform, "Ayuda", "W S / FLECHAS     ENTER", 24, new Vector2(164f, -400f), new Color(1f, 1f, 1f, 0.4f), font);
         new GameObject("EventSystem", typeof(EventSystem), typeof(InputSystemUIInputModule));
 
         var menu = go.AddComponent<TitleMenu>();
         SetRef(menu, "intro", intro);
         SetRef(menu, "startButton", start);
+        SetRef(menu, "optionsButton", options);
         SetRef(menu, "quitButton", quit);
         SetRef(menu, "group", group);
         return go;
@@ -459,6 +461,14 @@ public static partial class LabBuilder
         SetRef(tank, "splash", Burst(go.transform, "Salpicadura", new Vector3(x, floorY + 1.2f), new Vector2(2.4f, 1.6f), 70,
             new Color(0.45f, 1f, 0.6f), new Color(0.15f, 0.6f, 0.3f)));
         SetRef(tank, "glow", glow);
+
+        // el burbujeo del tanque, hasta que revienta
+        var sound = go.AddComponent<AudioSource>();
+        sound.clip = AssetDatabase.LoadAssetAtPath<AudioClip>("Assets/Sounds/Intro/Sonido de tanque de agua.wav");
+        sound.outputAudioMixerGroup = MixerGroup("Efectos");
+        sound.loop = true;
+        sound.volume = 0.6f;
+        SetRef(tank, "bubbleSound", sound);
         return tank;
     }
 

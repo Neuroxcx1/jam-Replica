@@ -3,6 +3,9 @@ using UnityEngine;
 // Montacargas de contrapeso: la cabina sube cuando en el contrapeso hay mas carga que en ella
 // y baja cuando no (la cabina pesa mas que el contrapeso vacio). La carga la cuenta Load.
 // Al bajar, como la prensa: un cuerpo debajo la atasca (hasta que lo recuperas con Q) y a ti o a un clon os aplasta.
+// El hielo (las copias congeladas) que toca la cabina o el contrapeso se rompe y vuelve como replica:
+// asi no se puede subir por el hueco con hielo en vez de usar el montacargas.
+// Lo que sube lo marca Car Travel (no el tamaño): al seleccionarlo, el recuadro verde es hasta donde llega la cabina.
 public class CounterweightLift : MonoBehaviour
 {
     [SerializeField] Rigidbody2D car;
@@ -23,6 +26,7 @@ public class CounterweightLift : MonoBehaviour
 
     Collider2D carCol;
     Collider2D counterweightCol;
+    Player player;
     Vector2 carBottom;
     Vector2 counterweightTop;
     float lift;   // 0 = cabina abajo, 1 = cabina arriba
@@ -33,15 +37,29 @@ public class CounterweightLift : MonoBehaviour
         counterweightCol = counterweight.GetComponent<Collider2D>();
         carBottom = car.position;
         counterweightTop = counterweight.position;
+        player = FindAnyObjectByType<Player>();
     }
 
     void FixedUpdate()
     {
+        BreakIce(carCol);
+        BreakIce(counterweightCol);
         bool up = Load.On(counterweightCol) > Load.On(carCol);
         if (!up && Jammed()) return;
         lift = Mathf.MoveTowards(lift, up ? 1f : 0f, speed / carTravel * Time.fixedDeltaTime);
         car.MovePosition(carBottom + Vector2.up * carTravel * lift);
         counterweight.MovePosition(counterweightTop + Vector2.down * counterweightTravel * lift);
+    }
+
+    void BreakIce(Collider2D platform)
+    {
+        Bounds b = platform.bounds;
+        foreach (Collider2D c in Physics2D.OverlapBoxAll(b.center, b.size + new Vector3(0.1f, 0.16f), 0f))
+        {
+            if (!c.TryGetComponent(out Body body) || !body.Frozen) continue;
+            if (player != null) player.Return(body.gameObject);
+            else Destroy(body.gameObject);
+        }
     }
 
     // lo que hay justo debajo de la cabina cuando baja
@@ -71,6 +89,13 @@ public class CounterweightLift : MonoBehaviour
             float depth = counterweightTravel + 1f;
             Gizmos.DrawWireCube(new Vector3(weightPit.bounds.center.x, counterweight.position.y - depth / 2f), new Vector3(weightPit.bounds.size.x, depth));
         }
+    }
+
+    void OnDrawGizmosSelected()
+    {
+        if (car == null || !car.TryGetComponent(out Collider2D carShape)) return;
+        Gizmos.color = Color.green;
+        Gizmos.DrawWireCube(carShape.bounds.center + Vector3.up * carTravel, carShape.bounds.size);
     }
 
     void LateUpdate()

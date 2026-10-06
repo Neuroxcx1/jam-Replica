@@ -7,6 +7,9 @@ public class Body : MonoBehaviour
 {
     [SerializeField] float floatSpeed = 4f;
 
+    // el cubo de hielo que dejas al congelarte (Ctrl): se queda quieto en el aire
+    public bool Frozen { get; set; }
+
     Rigidbody2D rb;
     Collider2D col;
     float carry;
