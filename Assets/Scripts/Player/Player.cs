@@ -42,6 +42,8 @@ public class Player : MonoBehaviour
     public Rigidbody2D Rb { get; private set; }
     public Vector3 Feet => groundCheck.position;
     public Vector3 Checkpoint => checkpoint;
+    // al volver al checkpoint despues de morir (el cristal se recompone con esto)
+    public event System.Action Respawned;
     public float MoveInput { get; private set; }
     public float BaseGravity => gravity;
     public bool JumpHeld => jumpAction.IsPressed();
@@ -259,6 +261,7 @@ public class Player : MonoBehaviour
         Rb.linearVelocity = Vector2.zero;
         ClearJumpTimers();
         SetAlive(true);
+        Respawned?.Invoke();
     }
 
     public void SetCheckpoint(Vector3 position)
