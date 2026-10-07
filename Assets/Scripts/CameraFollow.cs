@@ -1,5 +1,4 @@
 using UnityEngine;
-using UnityEngine.InputSystem;
 
 public class CameraFollow : MonoBehaviour
 {
@@ -30,8 +29,6 @@ public class CameraFollow : MonoBehaviour
     float shakePixels;
     float shakeTime;
     float shakeTimer;
-    float rumble;
-    bool rumbling;
 
     // temblor en pixeles del juego. Menos de 1 = solo tiembla en algunos frames (mas suave)
     public static void Shake(float pixels, float duration)
@@ -42,8 +39,8 @@ public class CameraFollow : MonoBehaviour
         current.shakePixels = pixels;
         current.shakeTime = duration;
         current.shakeTimer = duration;
-        // el mando vibra con el temblor: nada en los pequeños (saltar) y fuerte en los grandes (lanzar un clon, morir)
-        current.rumble = Mathf.Clamp01((pixels - 1f) / 5f);
+        // el mando vibra con el temblor: nada en los pequeños y fuerte en los grandes (lanzar un clon, morir)
+        Rumble.Pulse(Mathf.Clamp01((pixels - 1f) / 5f), duration);
     }
 
     // plano fijo para las cinematicas: la camara se queda en ese punto en vez de seguir al jugador (null = seguirlo)
@@ -120,27 +117,10 @@ public class CameraFollow : MonoBehaviour
             shake = new Vector2(Mathf.Round(dir.x * pixels), Mathf.Round(dir.y * pixels)) / pixelsPerUnit;
         }
 
-        Rumble(shakeTimer > 0f ? rumble * Mathf.Clamp01(shakeTimer / shakeTime) : 0f);
-
         // en los planos de cinematica la camara se mueve suave, sin ajustarse a la rejilla de pixeles
         float x = shot.HasValue ? focus.x : Mathf.Clamp(Snap(focus.x + ahead), limitsX.x, limitsX.y);
         float y = shot.HasValue ? focus.y : Snap(focus.y);
         transform.position = new Vector3(x + shake.x, y + shake.y, transform.position.z);
     }
 
-    // solo vibra si se esta jugando con el mando, y nunca en la pausa. A todos los mandos conectados:
-    // si hay dos, el "actual" puede cambiar y uno se quedaria vibrando
-    void Rumble(float strength)
-    {
-        if (!ControlIcons.UsingGamepad || GameMenus.Paused) strength = 0f;
-        if (strength <= 0f && !rumbling) return;
-        foreach (Gamepad pad in Gamepad.all) pad.SetMotorSpeeds(strength * 0.7f, strength);
-        rumbling = strength > 0f;
-    }
-
-    void OnDisable()
-    {
-        if (rumbling) foreach (Gamepad pad in Gamepad.all) pad.SetMotorSpeeds(0f, 0f);
-        rumbling = false;
-    }
 }
