@@ -63,6 +63,9 @@ public class FinalDoor : MonoBehaviour
         if (!string.IsNullOrEmpty(nextScene))
         {
             if (!SceneDoor.Go(nextScene)) return;
+
+            GameProgress.SaveSceneStart(nextScene);
+
             completed = true;
             player.enabled = false;
             player.Rb.linearVelocity = Vector2.zero;
@@ -71,6 +74,8 @@ public class FinalDoor : MonoBehaviour
         }
 
         completed = true;
+
+        GameProgress.ClearSave();
 
         // Detener al jugador
         player.SetAlive(false);
