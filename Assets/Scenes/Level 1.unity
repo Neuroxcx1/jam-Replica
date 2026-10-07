@@ -10529,6 +10529,14 @@ PrefabInstance:
       propertyPath: m_LocalBounds.m_Extent.y
       value: 0.99853027
       objectReference: {fileID: 0}
+    - target: {fileID: 5271729249599974423, guid: 1baf3b378323dbd4db4258ea3167d8ca, type: 3}
+      propertyPath: spawnPoint
+      value: 
+      objectReference: {fileID: 422323193}
+    - target: {fileID: 5271729249599974423, guid: 1baf3b378323dbd4db4258ea3167d8ca, type: 3}
+      propertyPath: checkpointId
+      value: Nivel1_02
+      objectReference: {fileID: 0}
     - target: {fileID: 6573690573264558083, guid: 1baf3b378323dbd4db4258ea3167d8ca, type: 3}
       propertyPath: m_LocalPosition.x
       value: 61.5
@@ -10578,6 +10586,11 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 1baf3b378323dbd4db4258ea3167d8ca, type: 3}
+--- !u!4 &422323193 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 4472117375694162398, guid: 1baf3b378323dbd4db4258ea3167d8ca, type: 3}
+  m_PrefabInstance: {fileID: 422323192}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &426197464
 GameObject:
   m_ObjectHideFlags: 0
@@ -11501,6 +11514,10 @@ PrefabInstance:
       propertyPath: spawnPoint
       value: 
       objectReference: {fileID: 955203207}
+    - target: {fileID: 5271729249599974423, guid: 1baf3b378323dbd4db4258ea3167d8ca, type: 3}
+      propertyPath: checkpointId
+      value: Nivel1_01
+      objectReference: {fileID: 0}
     - target: {fileID: 6573690573264558083, guid: 1baf3b378323dbd4db4258ea3167d8ca, type: 3}
       propertyPath: m_LocalPosition.x
       value: 46.5
@@ -11653,10 +11670,10 @@ Camera:
   m_LensShift: {x: 0, y: 0}
   m_NormalizedViewPortRect:
     serializedVersion: 2
-    x: 0
-    y: 0.0050697085
-    width: 1
-    height: 0.99025667
+    x: 0.08783297
+    y: 0
+    width: 0.82425404
+    height: 1
   near clip plane: 0.3
   far clip plane: 1000
   field of view: 34
@@ -40304,6 +40321,14 @@ PrefabInstance:
       propertyPath: m_LocalBounds.m_Extent.y
       value: 0.99853027
       objectReference: {fileID: 0}
+    - target: {fileID: 5271729249599974423, guid: 1baf3b378323dbd4db4258ea3167d8ca, type: 3}
+      propertyPath: spawnPoint
+      value: 
+      objectReference: {fileID: 1142046618}
+    - target: {fileID: 5271729249599974423, guid: 1baf3b378323dbd4db4258ea3167d8ca, type: 3}
+      propertyPath: checkpointId
+      value: Nivel1_04
+      objectReference: {fileID: 0}
     - target: {fileID: 6573690573264558083, guid: 1baf3b378323dbd4db4258ea3167d8ca, type: 3}
       propertyPath: m_LocalPosition.x
       value: 107.5
@@ -40353,6 +40378,11 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 1baf3b378323dbd4db4258ea3167d8ca, type: 3}
+--- !u!4 &1142046618 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 4472117375694162398, guid: 1baf3b378323dbd4db4258ea3167d8ca, type: 3}
+  m_PrefabInstance: {fileID: 1142046617}
+  m_PrefabAsset: {fileID: 0}
 --- !u!4 &1158199661 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 5874282713075140933, guid: 51090c4f96d80684f96eeb388189061d, type: 3}
@@ -40972,11 +41002,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3633240027177059878, guid: e52b7039dbdde304daaf15ee2ceecc1c, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 92.83
+      value: 141.1
       objectReference: {fileID: 0}
     - target: {fileID: 3633240027177059878, guid: e52b7039dbdde304daaf15ee2ceecc1c, type: 3}
       propertyPath: m_LocalPosition.y
-      value: -1.17
+      value: 9.4
       objectReference: {fileID: 0}
     - target: {fileID: 3633240027177059878, guid: e52b7039dbdde304daaf15ee2ceecc1c, type: 3}
       propertyPath: m_LocalPosition.z
@@ -43125,6 +43155,14 @@ PrefabInstance:
       propertyPath: m_LocalBounds.m_Extent.y
       value: 0.99853027
       objectReference: {fileID: 0}
+    - target: {fileID: 5271729249599974423, guid: 1baf3b378323dbd4db4258ea3167d8ca, type: 3}
+      propertyPath: spawnPoint
+      value: 
+      objectReference: {fileID: 1413270096}
+    - target: {fileID: 5271729249599974423, guid: 1baf3b378323dbd4db4258ea3167d8ca, type: 3}
+      propertyPath: checkpointId
+      value: Nivel1_03
+      objectReference: {fileID: 0}
     - target: {fileID: 6573690573264558083, guid: 1baf3b378323dbd4db4258ea3167d8ca, type: 3}
       propertyPath: m_LocalPosition.x
       value: 71.98
@@ -43174,6 +43212,11 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 1baf3b378323dbd4db4258ea3167d8ca, type: 3}
+--- !u!4 &1413270096 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 4472117375694162398, guid: 1baf3b378323dbd4db4258ea3167d8ca, type: 3}
+  m_PrefabInstance: {fileID: 1413270095}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1001 &1422966196
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -43300,6 +43343,14 @@ PrefabInstance:
       propertyPath: m_LocalBounds.m_Extent.y
       value: 0.99853027
       objectReference: {fileID: 0}
+    - target: {fileID: 5271729249599974423, guid: 1baf3b378323dbd4db4258ea3167d8ca, type: 3}
+      propertyPath: spawnPoint
+      value: 
+      objectReference: {fileID: 1429141607}
+    - target: {fileID: 5271729249599974423, guid: 1baf3b378323dbd4db4258ea3167d8ca, type: 3}
+      propertyPath: checkpointId
+      value: Nivel1_05
+      objectReference: {fileID: 0}
     - target: {fileID: 6573690573264558083, guid: 1baf3b378323dbd4db4258ea3167d8ca, type: 3}
       propertyPath: m_LocalPosition.x
       value: 136.5
@@ -43349,6 +43400,11 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 1baf3b378323dbd4db4258ea3167d8ca, type: 3}
+--- !u!4 &1429141607 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 4472117375694162398, guid: 1baf3b378323dbd4db4258ea3167d8ca, type: 3}
+  m_PrefabInstance: {fileID: 1429141606}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &1430178511
 GameObject:
   m_ObjectHideFlags: 0
@@ -48471,6 +48527,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 1430178512}
     m_Modifications:
+    - target: {fileID: 4472117375694162398, guid: 1baf3b378323dbd4db4258ea3167d8ca, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: -1.572
+      objectReference: {fileID: 0}
     - target: {fileID: 4886076410158408775, guid: 1baf3b378323dbd4db4258ea3167d8ca, type: 3}
       propertyPath: m_LocalBounds.m_Center.y
       value: -0.00000011920929
@@ -48482,6 +48542,14 @@ PrefabInstance:
     - target: {fileID: 4886076410158408775, guid: 1baf3b378323dbd4db4258ea3167d8ca, type: 3}
       propertyPath: m_LocalBounds.m_Extent.y
       value: 0.99853027
+      objectReference: {fileID: 0}
+    - target: {fileID: 5271729249599974423, guid: 1baf3b378323dbd4db4258ea3167d8ca, type: 3}
+      propertyPath: spawnPoint
+      value: 
+      objectReference: {fileID: 1854411211}
+    - target: {fileID: 5271729249599974423, guid: 1baf3b378323dbd4db4258ea3167d8ca, type: 3}
+      propertyPath: checkpointId
+      value: Nivel1_06
       objectReference: {fileID: 0}
     - target: {fileID: 6573690573264558083, guid: 1baf3b378323dbd4db4258ea3167d8ca, type: 3}
       propertyPath: m_LocalPosition.x
@@ -48535,6 +48603,11 @@ PrefabInstance:
 --- !u!4 &1854411210 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 6573690573264558083, guid: 1baf3b378323dbd4db4258ea3167d8ca, type: 3}
+  m_PrefabInstance: {fileID: 1854411209}
+  m_PrefabAsset: {fileID: 0}
+--- !u!4 &1854411211 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 4472117375694162398, guid: 1baf3b378323dbd4db4258ea3167d8ca, type: 3}
   m_PrefabInstance: {fileID: 1854411209}
   m_PrefabAsset: {fileID: 0}
 --- !u!4 &1868557426 stripped
