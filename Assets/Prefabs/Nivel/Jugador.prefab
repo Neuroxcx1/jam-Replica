@@ -397,7 +397,7 @@ MonoBehaviour:
   groundLayer:
     serializedVersion: 2
     m_Bits: 256
-  maxReplicas: 2
+  maxReplicas: 6
   replicateCooldown: 0.25
   clonePrefab: {fileID: 4505683994145389960, guid: 8b12d470a8a0f834fb98e36c82bd0dd7, type: 3}
   bodyPrefab: {fileID: 1093909783041753337, guid: d8ee58fa98fc530468066f2af6d31a8d, type: 3}
@@ -408,6 +408,19 @@ MonoBehaviour:
   recallEffect: {fileID: 6141730320682079769, guid: 7336332f2462e074088f0a866b11c33e, type: 3}
   recallGhost: {fileID: 5084000825212496686, guid: 08883d90753be9b46bbf73e6a1415773, type: 3}
   replicateShake: 5
+  audioManager: {fileID: 2941463132775924513, guid: a4e0c7e2bbfb2054ebfb94ae49f5cd17, type: 3}
+  sonidoSalto: {fileID: 8300000, guid: 6818cb91682f9a742ba66228f377ab3b, type: 3}
+  sonidoReaparecer: {fileID: 8300000, guid: 49f34c44d56169b44ac7d69a194c168a, type: 3}
+  sonidoMorir: {fileID: 8300000, guid: 714bed66a72f0cc4fa5093c852a2d12a, type: 3}
+  sonidoTocarPiso: {fileID: 8300000, guid: 40784806ae6e17647ab4dc2830708ff7, type: 3}
+  sonidoReplicar: {fileID: 8300000, guid: 9a80ad68592adfe4a90691e5d491320e, type: 3}
+  sonidoCongelar: {fileID: 8300000, guid: 687ca17934f3a374cae8c2ac761c666f, type: 3}
+  sonidosPasos:
+  - {fileID: 8300000, guid: 1b6da2b51ba0d0248ad7be2e8b189ae2, type: 3}
+  - {fileID: 8300000, guid: 4df8a75ecf8d47b49a0f89455bb9e10d, type: 3}
+  - {fileID: 8300000, guid: a929fbfbf97d888458abba9ceb98167b, type: 3}
+  tiempoEntrePasos: 0.3
+  sonidoRecuperar: {fileID: 8300000, guid: 8beb434484f012f4e850607f0ade0093, type: 3}
 --- !u!1 &4356678765008781231
 GameObject:
   m_ObjectHideFlags: 0
