@@ -61,7 +61,6 @@ public static partial class LabBuilder
         Button options = MenuButton(pause, "OPCIONES", new Vector2(160f, -88f), font);
         Button toMenu = MenuButton(pause, "MENU PRINCIPAL", new Vector2(160f, -160f), font);
         ((RectTransform)toMenu.transform).sizeDelta = new Vector2(700f, 64f);
-        MenuText(pause, "Ayuda", "ESC / START     CONTINUAR", 24, new Vector2(164f, -400f), new Color(1f, 1f, 1f, 0.4f), font);
 
         // opciones: una barra por grupo del mezclador
         Transform optionsPanel = UiPanel(go.transform, "Opciones");
@@ -70,7 +69,6 @@ public static partial class LabBuilder
         var (musicSlider, musicValue) = VolumeRow(optionsPanel, "MUSICA", -64f, font);
         var (effects, effectsValue) = VolumeRow(optionsPanel, "EFECTOS", -144f, font);
         Button back = MenuButton(optionsPanel, "VOLVER", new Vector2(160f, -240f), font);
-        MenuText(optionsPanel, "Ayuda", "IZQUIERDA / DERECHA  VOLUMEN     ESC / B  VOLVER", 24, new Vector2(164f, -400f), new Color(1f, 1f, 1f, 0.4f), font);
 
         // al pulsar suena Select; en las que vuelven atras, Back
         foreach (Selectable option in go.GetComponentsInChildren<Selectable>(true))
@@ -106,7 +104,8 @@ public static partial class LabBuilder
     // nombre, barra y porcentaje; la barra se elige con arriba/abajo y se mueve con izquierda/derecha
     static (Slider, TMP_Text) VolumeRow(Transform parent, string name, float y, TMP_FontAsset font)
     {
-        MenuText(parent, name, name, 48, new Vector2(160f, y), new Color(0.55f, 0.6f, 0.65f), font);
+        // el nombre se pone verde al elegir la barra, como las opciones de los botones
+        TextMeshProUGUI label = MenuText(parent, name, name, 48, new Vector2(160f, y), Color.white, font);
         var go = new GameObject("Barra " + name, typeof(RectTransform));
         go.transform.SetParent(parent, false);
         var rect = (RectTransform)go.transform;
@@ -125,7 +124,7 @@ public static partial class LabBuilder
         var slider = go.AddComponent<Slider>();
         slider.fillRect = fill.rectTransform;
         slider.handleRect = handle.rectTransform;
-        slider.targetGraphic = handle;
+        slider.targetGraphic = label;
         slider.value = 1f;
         ColorBlock colors = slider.colors;
         colors.normalColor = new Color(0.55f, 0.6f, 0.65f);

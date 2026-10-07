@@ -39,6 +39,8 @@ public class CameraFollow : MonoBehaviour
         current.shakePixels = pixels;
         current.shakeTime = duration;
         current.shakeTimer = duration;
+        // el mando vibra con el temblor: nada en los pequeños y fuerte en los grandes (lanzar un clon, morir)
+        Rumble.Pulse(Mathf.Clamp01((pixels - 1f) / 5f), duration);
     }
 
     // plano fijo para las cinematicas: la camara se queda en ese punto en vez de seguir al jugador (null = seguirlo)
@@ -120,4 +122,5 @@ public class CameraFollow : MonoBehaviour
         float y = shot.HasValue ? focus.y : Snap(focus.y);
         transform.position = new Vector3(x + shake.x, y + shake.y, transform.position.z);
     }
+
 }

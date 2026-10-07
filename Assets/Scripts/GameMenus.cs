@@ -124,6 +124,7 @@ public class GameMenus : MonoBehaviour
 
         // por si algo (la pausa del golpe al morir) devuelve el tiempo mientras esta el menu
         if (Paused) Time.timeScale = 0f;
+        Rumble.Tick();
     }
 
     // solo jugando: no en el menu del principio, ni en la cinematica, ni con el panel de victoria
@@ -135,6 +136,7 @@ public class GameMenus : MonoBehaviour
 
     void Pause()
     {
+        Rumble.Stop();
         Paused = true;
         Time.timeScale = 0f;
         Show(pausePanel);
@@ -191,9 +193,14 @@ public class GameMenus : MonoBehaviour
         lastSelected = selectable.gameObject;
     }
 
+    // al salir del juego el mando no se queda vibrando
+    void OnDisable() => Rumble.Off();
+
     public void PlayUi(UiSound sound)
     {
         AudioClip clip = sound == UiSound.Move ? moveSound : sound == UiSound.Select ? selectSound : backSound;
+        // con el mando, un toque suave al moverse y algo mas al elegir o volver
+        Rumble.Pulse(sound == UiSound.Move ? 0.12f : 0.25f, sound == UiSound.Move ? 0.05f : 0.09f);
         // el de moverse mas bajo: suena mucho
         if (clip != null) uiSource.PlayOneShot(clip, sound == UiSound.Move ? 0.4f : 0.7f);
     }

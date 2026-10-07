@@ -61,8 +61,6 @@ public class Player : MonoBehaviour
 
     // las replicas que has puesto en esta zona (clones, cuerpos y copias congeladas), de la mas antigua a la mas nueva
     readonly List<GameObject> placed = new List<GameObject>();
-    // las de zonas anteriores: ya no cuentan, pero al morir tambien desaparecen
-    readonly List<GameObject> leftBehind = new List<GameObject>();
     readonly Collider2D[] groundHits = new Collider2D[8];
 
     StateMachine stateMachine;
@@ -75,6 +73,27 @@ public class Player : MonoBehaviour
     float jumpBufferTimer;
     float jumpLockTimer;
     float replicateTimer;
+
+
+    /// sonido global
+    public AudioManager audioManager;
+    public AudioClip sonidoSalto;
+    public AudioClip sonidoReaparecer;
+    public AudioClip sonidoMorir;
+    public AudioClip sonidoTocarPiso;
+    bool estabaEnElSuelo;
+    float cooldownSonidoPiso;
+    public AudioClip sonidoReplicar;
+    public AudioClip sonidoCongelar;
+
+    [Header("Sonido Pasos")]
+    public AudioClip[] sonidosPasos; // En el Inspector podrás poner 2, 3 o más audios
+    public float tiempoEntrePasos = 0.3f; // Ajusta este valor para sincronizarlo con la animación
+    float timerPasos;
+    public AudioClip sonidoRecuperar;
+
+
+
 
     void Awake()
     {
@@ -92,6 +111,8 @@ public class Player : MonoBehaviour
         freezeAction = InputSystem.actions.FindAction("Freeze");
         recallAction = InputSystem.actions.FindAction("Recall");
         restartAction = InputSystem.actions.FindAction("Restart");
+
+        estabaEnElSuelo = IsGrounded();
     }
 
     void Update()
@@ -107,14 +128,65 @@ public class Player : MonoBehaviour
 
         if (IsDead) return;
 
+        // --- DETECCIÓN DE ATERRIZAJE ---
+        bool enSueloActual = IsGrounded();
+
+        // Reducimos el temporizador si es mayor a 0
+        if (cooldownSonidoPiso > 0)
+        {
+            cooldownSonidoPiso -= Time.deltaTime;
+        }
+
+        // Si ahora está en el suelo, antes no lo estaba, Y ya pasó el tiempo de espera
+        if (enSueloActual && !estabaEnElSuelo && cooldownSonidoPiso <= 0f)
+        {
+            if (audioManager != null && sonidoTocarPiso != null)
+            {
+                audioManager.ReproducirSonido(sonidoTocarPiso);
+                // Bloqueamos el sonido por 0.15 segundos para evitar el glitch del elevador
+                cooldownSonidoPiso = 1f;
+            }
+        }
+
+        estabaEnElSuelo = enSueloActual;
+        // -------------------------------
+
+
         // el stick del mando rebota un poco hacia el otro lado al soltarlo: solo cuenta pasada la mitad,
         // y entonces a tope, como las teclas (si no, al soltarlo yendo a la izquierda te giraba a la derecha)
+
+        void ReproducirSonidoPaso()
+        {
+            if (audioManager != null && sonidosPasos != null && sonidosPasos.Length > 0)
+            {
+                int pasoAleatorio = Random.Range(0, sonidosPasos.Length);
+                audioManager.ReproducirSonido(sonidosPasos[pasoAleatorio]);
+            }
+        }
+
         float x = moveAction.ReadValue<Vector2>().x;
         MoveInput = Mathf.Abs(x) < 0.5f ? 0f : Mathf.Sign(x);
         if (MoveInput != 0)
         {
             facing = MoveInput > 0 ? 1 : -1;
             visual.localScale = new Vector3(facing, 1, 1);
+        }
+
+        // --- LÓGICA DE PASOS ---
+        // Si se está moviendo y está tocando el suelo
+        if (MoveInput != 0 && IsGrounded())
+        {
+            timerPasos -= Time.deltaTime;
+            if (timerPasos <= 0)
+            {
+                ReproducirSonidoPaso();
+                timerPasos = tiempoEntrePasos; // Reinicia el temporizador
+            }
+        }
+        else
+        {
+            // Si se detiene o salta, reiniciamos a 0 para que el primer paso suene apenas toque el suelo y camine
+            timerPasos = 0f;
         }
 
         // coyote time: un momento de gracia para saltar despues de dejar el suelo.
@@ -124,8 +196,18 @@ public class Player : MonoBehaviour
         else coyoteTimer -= Time.deltaTime;
 
         // buffer: guarda el salto aunque lo pulses un poco antes de tocar el suelo
-        if (jumpAction.WasPressedThisFrame()) jumpBufferTimer = jumpBufferTime;
-        else jumpBufferTimer -= Time.deltaTime;
+        if (jumpAction.WasPressedThisFrame())
+        {
+            jumpBufferTimer = jumpBufferTime;
+            if (coyoteTimer > 0)
+            {
+                audioManager.ReproducirSonido(sonidoSalto);
+            }
+        }
+        else
+        {
+            jumpBufferTimer -= Time.deltaTime;
+        }
 
         // Shift: lanza un clon. Ctrl: deja una copia congelada. Q: recupera la replica mas antigua
         replicateTimer -= Time.deltaTime;
@@ -180,6 +262,12 @@ public class Player : MonoBehaviour
         clone.Init(facing, this);
         placed.Add(clone.gameObject);
 
+        // Añade la reproducción del sonido aquí
+        if (audioManager != null && sonidoReplicar != null)
+        {
+            audioManager.ReproducirSonido(sonidoReplicar);
+        }
+
         if (splitEffect != null)
             Instantiate(splitEffect, transform.position, Quaternion.identity).Init(transform, clone.transform, facing);
         CameraFollow.Shake(replicateShake, 0.15f);
@@ -194,6 +282,12 @@ public class Player : MonoBehaviour
         Vector2 at = Rb.position + Vector2.down * (col.bounds.extents.y - half);
         ReplicasLeft--;
         GameObject body = Instantiate(bodyPrefab, at, Quaternion.identity);
+
+        if (audioManager != null && sonidoCongelar != null)
+        {
+            audioManager.ReproducirSonido(sonidoCongelar); //sonido
+        }
+
         body.GetComponent<Rigidbody2D>().bodyType = RigidbodyType2D.Static;
         body.GetComponent<Body>().Frozen = true;
         if (freezeEffect != null) Instantiate(freezeEffect, at, Quaternion.identity).Attach(body);
@@ -223,6 +317,11 @@ public class Player : MonoBehaviour
         placed.RemoveAll(piece => piece == null);
         if (placed.Count == 0) return;
 
+        if (audioManager != null && sonidoRecuperar != null)
+        {
+            audioManager.ReproducirSonido(sonidoRecuperar);
+        }
+
         Return(placed[0]);
     }
 
@@ -236,31 +335,34 @@ public class Player : MonoBehaviour
         ReplicasLeft = Mathf.Min(maxReplicas, ReplicasLeft + 1);
     }
 
+    // todas tus copias (clones, cuerpos y hielo) vuelven a ti a la vez: al morir y al pasar un checkpoint.
+    // Asi nunca quedan copias tuyas de una zona a otra. ghost: vuelan hacia ti (al morir solo desaparecen)
+    void ReturnAll(bool ghost)
+    {
+        placed.RemoveAll(piece => piece == null);
+        if (ghost && placed.Count > 0 && audioManager != null && sonidoRecuperar != null)
+            audioManager.ReproducirSonido(sonidoRecuperar);
+        foreach (GameObject piece in placed.ToArray()) Return(piece, ghost);
+    }
+
     // cuando un clon se convierte en cuerpo, el cuerpo ocupa su sitio en la cola
     public void Replace(GameObject oldPiece, GameObject newPiece)
     {
         int index = placed.IndexOf(oldPiece);
         if (index >= 0) placed[index] = newPiece;
-        index = leftBehind.IndexOf(oldPiece);
-        if (index >= 0) leftBehind[index] = newPiece;
     }
 
     // al morir (laser, torreta, prensa...) no dejas nada: vuelves al checkpoint
     public void Die()
     {
         if (IsDead) return;
+        if (audioManager != null && sonidoMorir != null)
+        {
+            audioManager.ReproducirSonido(sonidoMorir);
+        }
 
         if (deathEffect != null) Instantiate(deathEffect, transform.position, Quaternion.identity);
-        // todas tus copias (clones, cuerpos y hielo) desaparecen y vuelven como replicas: no queda nada tuyo por ahi
-        placed.RemoveAll(piece => piece == null);
-        foreach (GameObject piece in placed.ToArray()) Return(piece, false);
-        foreach (GameObject piece in leftBehind)
-        {
-            if (piece == null) continue;
-            if (recallEffect != null) Instantiate(recallEffect, piece.transform.position, Quaternion.identity);
-            Destroy(piece);
-        }
-        leftBehind.Clear();
+        ReturnAll(false);
         stateMachine.ChangeState("dead");
     }
 
@@ -284,17 +386,21 @@ public class Player : MonoBehaviour
         ClearJumpTimers();
         SetAlive(true);
         Respawned?.Invoke();
+
+        if (audioManager != null && sonidoReaparecer != null)
+        {
+            audioManager.ReproducirSonido(sonidoReaparecer);
+        }
     }
 
     public void SetCheckpoint(Vector3 position)
     {
         // solo un checkpoint nuevo recarga las replicas, reaparecer en el mismo no.
-        // Lo que dejaste en la zona anterior se queda ahi hasta que mueras
+        // Tus copias de la zona anterior vuelven a ti
         if (position == checkpoint) return;
         checkpoint = position;
+        ReturnAll(true);
         ReplicasLeft = maxReplicas;
-        leftBehind.AddRange(placed);
-        placed.Clear();
     }
 
     void OnDrawGizmosSelected()
@@ -303,4 +409,7 @@ public class Player : MonoBehaviour
         Gizmos.color = Color.yellow;
         Gizmos.DrawWireCube(groundCheck.position, groundCheckSize);
     }
+
+  
+
 }
