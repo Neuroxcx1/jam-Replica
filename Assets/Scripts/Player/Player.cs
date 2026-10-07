@@ -61,6 +61,8 @@ public class Player : MonoBehaviour
 
     // las replicas que has puesto en esta zona (clones, cuerpos y copias congeladas), de la mas antigua a la mas nueva
     readonly List<GameObject> placed = new List<GameObject>();
+    // las de zonas anteriores: ya no cuentan, pero al morir tambien desaparecen
+    readonly List<GameObject> leftBehind = new List<GameObject>();
     readonly Collider2D[] groundHits = new Collider2D[8];
 
     StateMachine stateMachine;
@@ -239,6 +241,8 @@ public class Player : MonoBehaviour
     {
         int index = placed.IndexOf(oldPiece);
         if (index >= 0) placed[index] = newPiece;
+        index = leftBehind.IndexOf(oldPiece);
+        if (index >= 0) leftBehind[index] = newPiece;
     }
 
     // al morir (laser, torreta, prensa...) no dejas nada: vuelves al checkpoint
@@ -250,6 +254,13 @@ public class Player : MonoBehaviour
         // todas tus copias (clones, cuerpos y hielo) desaparecen y vuelven como replicas: no queda nada tuyo por ahi
         placed.RemoveAll(piece => piece == null);
         foreach (GameObject piece in placed.ToArray()) Return(piece, false);
+        foreach (GameObject piece in leftBehind)
+        {
+            if (piece == null) continue;
+            if (recallEffect != null) Instantiate(recallEffect, piece.transform.position, Quaternion.identity);
+            Destroy(piece);
+        }
+        leftBehind.Clear();
         stateMachine.ChangeState("dead");
     }
 
@@ -278,10 +289,11 @@ public class Player : MonoBehaviour
     public void SetCheckpoint(Vector3 position)
     {
         // solo un checkpoint nuevo recarga las replicas, reaparecer en el mismo no.
-        // Lo que dejaste en la zona anterior se queda ahi para siempre
+        // Lo que dejaste en la zona anterior se queda ahi hasta que mueras
         if (position == checkpoint) return;
         checkpoint = position;
         ReplicasLeft = maxReplicas;
+        leftBehind.AddRange(placed);
         placed.Clear();
     }
 
