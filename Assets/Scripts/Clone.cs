@@ -89,11 +89,13 @@ public class Clone : MonoBehaviour
         {
             if (collision.GetContact(i).normal.x * direction < -0.9f)
                 hitWall = true;
+            
         }
     }
 
     public void Die()
     {
+        Debug.Log("entro en Die");
         if (dead) return;
         dead = true;
 
@@ -109,5 +111,10 @@ public class Clone : MonoBehaviour
         if (effect != null) Instantiate(effect, transform.position, Quaternion.identity);
         if (impact) CameraFollow.Shake(impactShake, 0.12f);
         Destroy(gameObject);
+    }
+
+    public void lifestended()
+    {
+        lifeTime = lifeTime + 10f;
     }
 }
