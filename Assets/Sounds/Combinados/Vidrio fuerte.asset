@@ -1,0 +1,52 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f842283e707a0eb702dd1baceb74c5fb, type: 3}
+  m_Name: Vidrio fuerte
+  m_EditorClassIdentifier: Assembly-CSharp::SoundMix
+  output: {fileID: 24300020, guid: 7d1b0cb1d39ec18ed87a50a06b5262f3, type: 2}
+  volume: 0.9
+  layers:
+  - clip: {fileID: 8300000, guid: aba5551b5ed632544841f60806e193f4, type: 3}
+    delay: 0
+    volume: 1
+    pitch: 1
+    start: 0.25
+    length: 0
+    fadeOut: 0.2
+  - clip: {fileID: 8300000, guid: 3662911c21d8ed843a3804de9ff8cfdf, type: 3}
+    delay: 0.02
+    volume: 0.9
+    pitch: 0.95
+    start: 0
+    length: 0
+    fadeOut: 0.2
+  - clip: {fileID: 8300000, guid: 9152afad8764eea4184e20ea4ee728dd, type: 3}
+    delay: 0.06
+    volume: 0.8
+    pitch: 1.1
+    start: 0
+    length: 0
+    fadeOut: 0.2
+  - clip: {fileID: 8300000, guid: 3662911c21d8ed843a3804de9ff8cfdf, type: 3}
+    delay: 0.18
+    volume: 0.45
+    pitch: 1.3
+    start: 0
+    length: 0
+    fadeOut: 0.2
+  - clip: {fileID: 8300000, guid: 9152afad8764eea4184e20ea4ee728dd, type: 3}
+    delay: 0.32
+    volume: 0.35
+    pitch: 1.5
+    start: 0
+    length: 0
+    fadeOut: 0.2

@@ -602,7 +602,14 @@ public static class LabAssets
                 sheet.SetPixels32(t * 16, k * 18, 16, 16, tile.GetPixels32());
                 Object.DestroyImmediate(tile);
             }
-            rects.Add(NewRect(keys[k].name, new Rect(0, k * 18, tiles.Length * 16, 16), new Vector2(0.5f, 0.5f)));
+            // solo lo que se ve: algunas teclas (Ctrl, Alt) no llenan su ultimo tile. Ancho par, para caer en la rejilla de pixeles
+            int left = tiles.Length * 16, right = -1;
+            for (int x = 0; x < tiles.Length * 16; x++)
+                for (int y = 0; y < 16; y++)
+                    if (sheet.GetPixel(x, k * 18 + y).a > 0f) { left = Mathf.Min(left, x); right = Mathf.Max(right, x); }
+            int width = right - left + 1;
+            width += width % 2;
+            rects.Add(NewRect(keys[k].name, new Rect(left, k * 18, width, 16), new Vector2(0.5f, 0.5f)));
         }
         string path = $"{Generated}/Teclas.png";
         File.WriteAllBytes(path, sheet.EncodeToPNG());

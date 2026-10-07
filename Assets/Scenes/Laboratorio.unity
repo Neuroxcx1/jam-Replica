@@ -13826,10 +13826,10 @@ Camera:
   m_LensShift: {x: 0, y: 0}
   m_NormalizedViewPortRect:
     serializedVersion: 2
-    x: 0.4158497
+    x: 0
     y: 0
-    width: 0.7654321
-    height: 0.7329624
+    width: 1
+    height: 1
   near clip plane: 0.3
   far clip plane: 1000
   field of view: 34
@@ -87736,6 +87736,83 @@ LineRenderer:
   m_UseWorldSpace: 1
   m_Loop: 0
   m_ApplyActiveColorSpace: 1
+--- !u!1001 &571853369
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 0}
+    m_Modifications:
+    - target: {fileID: 2013832304208718989, guid: c7d8dcb11bbd6614fba943c1e8942582, type: 3}
+      propertyPath: nextScene
+      value: Esena2
+      objectReference: {fileID: 0}
+    - target: {fileID: 2013832304208718989, guid: c7d8dcb11bbd6614fba943c1e8942582, type: 3}
+      propertyPath: nextSceneAsset
+      value: 
+      objectReference: {fileID: 102900000, guid: db1056e22ce929648a57cc85e28dbdea, type: 3}
+    - target: {fileID: 3894988129448118862, guid: c7d8dcb11bbd6614fba943c1e8942582, type: 3}
+      propertyPath: m_LocalBounds.m_Center.y
+      value: -0.00000011920929
+      objectReference: {fileID: 0}
+    - target: {fileID: 3894988129448118862, guid: c7d8dcb11bbd6614fba943c1e8942582, type: 3}
+      propertyPath: m_LocalBounds.m_Extent.x
+      value: 0.9985302
+      objectReference: {fileID: 0}
+    - target: {fileID: 3894988129448118862, guid: c7d8dcb11bbd6614fba943c1e8942582, type: 3}
+      propertyPath: m_LocalBounds.m_Extent.y
+      value: 0.99853027
+      objectReference: {fileID: 0}
+    - target: {fileID: 6311126680968306267, guid: c7d8dcb11bbd6614fba943c1e8942582, type: 3}
+      propertyPath: m_Name
+      value: Puerta final
+      objectReference: {fileID: 0}
+    - target: {fileID: 8846320086643501180, guid: c7d8dcb11bbd6614fba943c1e8942582, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 23.506577
+      objectReference: {fileID: 0}
+    - target: {fileID: 8846320086643501180, guid: c7d8dcb11bbd6614fba943c1e8942582, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 5.9436474
+      objectReference: {fileID: 0}
+    - target: {fileID: 8846320086643501180, guid: c7d8dcb11bbd6614fba943c1e8942582, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8846320086643501180, guid: c7d8dcb11bbd6614fba943c1e8942582, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 8846320086643501180, guid: c7d8dcb11bbd6614fba943c1e8942582, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8846320086643501180, guid: c7d8dcb11bbd6614fba943c1e8942582, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8846320086643501180, guid: c7d8dcb11bbd6614fba943c1e8942582, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8846320086643501180, guid: c7d8dcb11bbd6614fba943c1e8942582, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8846320086643501180, guid: c7d8dcb11bbd6614fba943c1e8942582, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8846320086643501180, guid: c7d8dcb11bbd6614fba943c1e8942582, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: c7d8dcb11bbd6614fba943c1e8942582, type: 3}
 --- !u!1 &585377249
 GameObject:
   m_ObjectHideFlags: 0
@@ -90546,7 +90623,7 @@ Transform:
   m_GameObject: {fileID: 908326774}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 4.5, y: 6.5, z: 0}
+  m_LocalPosition: {x: 18.75, y: 6.5, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -102683,6 +102760,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b2a22521753d456ba86baedaffb094b1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::FinalDoor
+  nextSceneAsset: {fileID: 0}
   nextScene: 
   victoryPanel: {fileID: 0}
   victoryAnimator: {fileID: 0}
@@ -126989,3 +127067,4 @@ SceneRoots:
   - {fileID: 1991192681}
   - {fileID: 2136854201}
   - {fileID: 1049282106}
+  - {fileID: 571853369}

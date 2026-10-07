@@ -3,11 +3,14 @@ using UnityEngine.Rendering.Universal;
 
 // Torreta de seguridad: apunta a lo mas cercano que vea delante (el jugador o una replica),
 // carga un momento y dispara. Paredes, cajas y cuerpos la tapan; las replicas sirven de señuelo.
+// Esta dibujada mirando a la izquierda: Facing Right la voltea (o Scale X en -1). Al seleccionarla se ve su cono.
+[ExecuteAlways]
 public class Turret : MonoBehaviour
 {
     enum Mode { Idle, Charging, Locked, Cooldown }
 
     [SerializeField] Transform muzzle;
+    [Tooltip("Marcalo para que mire y dispare a la derecha")]
     [SerializeField] bool facingRight;
     [SerializeField] float range = 13f;
     [SerializeField] float maxAngle = 50f;
@@ -33,8 +36,20 @@ public class Turret : MonoBehaviour
     float boltTimer;
     Vector2 aim;
 
+    void Awake()
+    {
+        Face();
+    }
+
     void Update()
     {
+        // en el editor solo se voltea, para ver hacia donde mira al colocarla
+        if (!Application.isPlaying)
+        {
+            Face();
+            return;
+        }
+
         timer -= Time.deltaTime;
         boltTimer -= Time.deltaTime;
         bolt.enabled = boltTimer > 0f;
@@ -79,9 +94,30 @@ public class Turret : MonoBehaviour
         timer = time;
     }
 
+    // el dibujo y el cañon al lado que mira
+    void Face()
+    {
+        if (body == null || muzzle == null) return;
+        body.flipX = facingRight;
+        Vector3 p = muzzle.localPosition;
+        muzzle.localPosition = new Vector3(facingRight ? Mathf.Abs(p.x) : -Mathf.Abs(p.x), p.y, p.z);
+    }
+
+    // hacia donde mira en el mundo: cuenta Facing Right y tambien si la han volteado o girado
+    Vector2 Forward() => transform.TransformVector(facingRight ? Vector3.right : Vector3.left).normalized;
+
+    void OnDrawGizmosSelected()
+    {
+        if (muzzle == null) return;
+        Gizmos.color = Color.red;
+        Vector3 reach = Forward() * range;
+        Gizmos.DrawLine(muzzle.position, muzzle.position + Quaternion.Euler(0f, 0f, maxAngle) * reach);
+        Gizmos.DrawLine(muzzle.position, muzzle.position + Quaternion.Euler(0f, 0f, -maxAngle) * reach);
+    }
+
     Collider2D FindTarget()
     {
-        Vector2 forward = facingRight ? Vector2.right : Vector2.left;
+        Vector2 forward = Forward();
         Collider2D best = null;
         float bestDistance = range;
 

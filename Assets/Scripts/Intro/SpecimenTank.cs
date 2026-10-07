@@ -9,6 +9,9 @@ public class SpecimenTank : MonoBehaviour
     [SerializeField] Sprite broken;
     [SerializeField] SpriteRenderer liquid;
     [SerializeField] ParticleSystem bubbles;
+    [SerializeField] AudioSource bubbleSound;
+    [SerializeField] SoundMix crackSound;
+    [SerializeField] SoundMix breakSound;
     [SerializeField] ParticleSystem shards;
     [SerializeField] ParticleSystem splash;
     [SerializeField] Light2D glow;
@@ -16,6 +19,7 @@ public class SpecimenTank : MonoBehaviour
     public void Crack()
     {
         glass.sprite = cracked;
+        if (crackSound != null) crackSound.Play();
         CameraFollow.Shake(2f, 0.25f);
     }
 
@@ -25,11 +29,13 @@ public class SpecimenTank : MonoBehaviour
         glass.sprite = broken;
         liquid.enabled = false;
         bubbles.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+        if (bubbleSound != null) bubbleSound.Stop();
         glow.intensity *= 0.35f;
         if (quiet) return;
 
         shards.Play();
         splash.Play();
+        if (breakSound != null) breakSound.Play();
         CameraFollow.Shake(6f, 0.4f);
     }
 }

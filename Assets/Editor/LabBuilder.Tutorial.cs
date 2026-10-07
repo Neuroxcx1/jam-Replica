@@ -93,6 +93,42 @@ public static partial class LabBuilder
         Debug.Log("Escena nueva en " + path + ": pinta las salas con la paleta Laboratorio y arrastra los prefabs de " + LevelFolder);
     }
 
+    // las torretas sueltas de la escena abierta (las copiadas del laboratorio) pasan a ser el prefab Torreta,
+    // en el mismo sitio y con sus ajustes (hacia donde mira, alcance, tiempos...)
+    [MenuItem("Replica/Torretas de la escena a prefab")]
+    static void TurretsToPrefab()
+    {
+        var prefab = AssetDatabase.LoadAssetAtPath<GameObject>($"{LevelFolder}/Torreta.prefab");
+        if (prefab == null)
+        {
+            Debug.LogError("Falta el prefab " + LevelFolder + "/Torreta.prefab");
+            return;
+        }
+        int count = 0;
+        foreach (Turret old in Object.FindObjectsByType<Turret>(FindObjectsInactive.Include))
+        {
+            if (PrefabUtility.IsPartOfPrefabInstance(old)) continue;
+            Transform t = old.transform;
+            var go = (GameObject)PrefabUtility.InstantiatePrefab(prefab, t.gameObject.scene);
+            go.transform.SetParent(t.parent, false);
+            go.transform.SetSiblingIndex(t.GetSiblingIndex());
+            go.transform.SetPositionAndRotation(t.position, t.rotation);
+            go.transform.localScale = t.localScale;
+            go.name = old.name;
+
+            var from = new SerializedObject(old);
+            var to = new SerializedObject(go.GetComponent<Turret>());
+            foreach (string field in new[] { "facingRight", "range", "maxAngle", "chargeTime", "lockTime", "cooldown", "sightMask", "targetMask", "sightColor", "shakePixels" })
+                to.CopyFromSerializedProperty(from.FindProperty(field));
+            to.ApplyModifiedPropertiesWithoutUndo();
+
+            Undo.RegisterCreatedObjectUndo(go, "Torretas a prefab");
+            Undo.DestroyObjectImmediate(old.gameObject);
+            count++;
+        }
+        Debug.Log(count + " torretas pasadas al prefab Torreta");
+    }
+
     [MenuItem("Replica/Regenerar prefabs del nivel")]
     static void RebuildLevelPrefabsMenu()
     {
@@ -372,6 +408,7 @@ public static partial class LabBuilder
         finalDoorPrefab = LevelPrefab("Puerta final", CreateFinalDoor);
         LevelPrefab("Muestra de mutageno", CreateSample);
         signPrefab = LevelPrefab("Cartel", CreateSignPrefab);
+        LevelPrefab("Torreta", CreateTurret);
     }
 
     static GameObject LevelPrefab(string name, System.Func<GameObject> create)

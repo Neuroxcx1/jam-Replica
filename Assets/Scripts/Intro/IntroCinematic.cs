@@ -28,6 +28,16 @@ public class IntroCinematic : MonoBehaviour
     [SerializeField] SpriteRenderer[] glows;   // tubos y bombillas que brillan solos
     [SerializeField] Behaviour[] machines;     // parpadeos: sin corriente se paran
 
+    [Header("Sonido")]
+    // la sala con los cientificos trabajando: suena en el menu y sigue hasta el temblor (voces) o el apagon (ambiente)
+    [SerializeField] AudioSource ambience;
+    [SerializeField] AudioSource[] voices;
+    // el zumbido de la corriente de emergencia, ya jugando
+    [SerializeField] AudioSource emergencyAmbience;
+    // los fluorescentes al volver la corriente (Luces): las luces se encienden con sus chasquidos
+    [SerializeField] AudioSource powerOnSound;
+    [SerializeField] SoundMix quakeSound;
+
     [Header("Planos (zoom: veces mas cerca que al jugar)")]
     [SerializeField] float closeZoom = 4f;
     [SerializeField] float wideZoom = 2f;
@@ -54,16 +64,25 @@ public class IntroCinematic : MonoBehaviour
     float skipFrom;
     bool floating;
     bool playing;
+    float emergencyVolume;
 
     // sin recarga de dominio (asi esta el proyecto) la variable sobreviviria entre partidas del editor
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
     static void ResetSeen() => seen = false;
+
+    // al volver al menu principal desde la pausa: otra vez el menu y la cinematica
+    public static void ShowMenuAgain() => seen = false;
 
     void Start()
     {
         cam = pixelCamera.GetComponent<Camera>();
         baseSize = pixelCamera.refResolutionY / (2f * pixelCamera.assetsPPU);
         globalIntensity = globalLight.intensity;
+        if (emergencyAmbience != null)
+        {
+            emergencyVolume = emergencyAmbience.volume;
+            emergencyAmbience.volume = 0f;
+        }
         if (seen)
         {
             menu.SetActive(false);
@@ -116,6 +135,8 @@ public class IntroCinematic : MonoBehaviour
         // temblor: cae polvo, las luces parpadean y la camara se acerca un poco con el susto; la ventana se raja...
         CameraFollow.Shake(3f, quakeTime + darkTime);
         dust.Play();
+        if (quakeSound != null) quakeSound.Play();
+        foreach (AudioSource voice in voices) StartCoroutine(FadeSound(voice, 0f, 0.6f));
         StartCoroutine(Frame(shot, wideZoom * 1.15f, quakeTime));
         yield return Flicker(quakeTime / 3f);
         window.Crack();
@@ -124,6 +145,7 @@ public class IntroCinematic : MonoBehaviour
         // ...y revienta. Apagon: solo queda la luz verde del tanque y los cientificos evacuan
         window.Shatter();
         SetPower(false);
+        StartCoroutine(FadeSound(ambience, 0f, 0.4f));
         for (int i = 0; i < scientists.Length; i++) scientists[i].Flee(exits[i]);
         yield return new WaitForSeconds(darkTime);
 
@@ -143,12 +165,17 @@ public class IntroCinematic : MonoBehaviour
 
         // vuelve la corriente de emergencia
         yield return new WaitForSeconds(powerBackDelay);
-        for (int i = 0; i < 4; i++)
+        if (powerOnSound != null && powerOnSound.clip != null) yield return LightFlicker.SwitchOn(powerOnSound, SetPower);
+        else
         {
-            SetPower(i % 2 == 1);
-            yield return new WaitForSeconds(0.08f);
+            for (int i = 0; i < 4; i++)
+            {
+                SetPower(i % 2 == 1);
+                yield return new WaitForSeconds(0.08f);
+            }
+            SetPower(true);
         }
-        SetPower(true);
+        yield return FadeSound(emergencyAmbience, emergencyVolume, 1.5f);
     }
 
     void Update()
@@ -171,6 +198,13 @@ public class IntroCinematic : MonoBehaviour
         tank.Break(quiet);
         if (quiet)
         {
+            foreach (AudioSource voice in voices) voice.Stop();
+            if (ambience != null) ambience.Stop();
+            if (emergencyAmbience != null)
+            {
+                emergencyAmbience.volume = emergencyVolume;
+                emergencyAmbience.Play();
+            }
             foreach (Scientist scientist in scientists) scientist.gameObject.SetActive(false);
             dust.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
             SetPower(true);
@@ -227,6 +261,21 @@ public class IntroCinematic : MonoBehaviour
         SetZoom(1f);
         pixelCamera.enabled = true;
         CameraFollow.SetShot(null);
+    }
+
+    // sube o baja un sonido poco a poco (si llega a 0 se para)
+    IEnumerator FadeSound(AudioSource source, float to, float time)
+    {
+        if (source == null) yield break;
+        if (!source.isPlaying) source.Play();
+        float from = source.volume;
+        for (float t = 0f; t < time; t += Time.deltaTime)
+        {
+            source.volume = Mathf.Lerp(from, to, t / time);
+            yield return null;
+        }
+        source.volume = to;
+        if (to <= 0f) source.Stop();
     }
 
     IEnumerator Flicker(float time)
