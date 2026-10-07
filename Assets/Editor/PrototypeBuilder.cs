@@ -13,14 +13,11 @@ public static class PrototypeBuilder
     const string TemplateScenePath = "Assets/Settings/Scenes/URP2DSceneTemplate.unity";
 
     static readonly Vector2 CharacterSize = new Vector2(0.8f, 1f);
+    // el cuerpo es el bicho encogido en un cubo: mas bajo que el, como en el dibujo
+    static readonly Vector2 BodySize = new Vector2(0.8f, 0.75f);
 
     static readonly Color GroundColor = new Color(0.28f, 0.27f, 0.36f);
     static readonly Color BoxColor = new Color(0.42f, 0.38f, 0.55f);
-    static readonly Color PlayerColor = new Color(0.35f, 0.85f, 1f);
-    // replicas y cuerpos en gris neutro: el color lo pone el material (Shader Graph ReplicaSprite)
-    static readonly Color CloneColor = new Color(0.5f, 0.5f, 0.5f);
-    static readonly Color BodyColor = new Color(0.5f, 0.5f, 0.5f);
-    static readonly Color EyeColor = new Color(0.08f, 0.08f, 0.12f);
     static readonly Color SpikeColor = new Color(0.95f, 0.3f, 0.35f);
     static readonly Color FlagColor = new Color(1f, 0.85f, 0.3f);
     static readonly Color GoalColor = new Color(1f, 0.75f, 0.15f);
@@ -54,8 +51,10 @@ public static class PrototypeBuilder
     static EffectsBuilder.EffectSet effects;
     static Clone clonePrefab;
     static GameObject bodyPrefab;
+    static LabAssets.Character character;
 
     public static int GroundLayer => groundLayer;
+    public static LabAssets.Character Character => character;
     public static Sprite Square => square;
 
     public static UnityEngine.SceneManagement.Scene NewSceneFromTemplate(string path)
@@ -79,6 +78,9 @@ public static class PrototypeBuilder
         groundLayer = AddLayer("Ground");
 
         effects = EffectsBuilder.Build();
+        character = LabAssets.CreateCharacter();
+        // al congelarte (Ctrl) la copia se encoge y acaba en el cubo congelado
+        SetArray(effects.freeze, "bodyFrames", character.frozenCube);
         bodyPrefab = CreateBodyPrefab(effects);
         clonePrefab = CreateClonePrefab(bodyPrefab, effects);
         return CreatePlayer(position, clonePrefab, bodyPrefab, effects);
@@ -128,15 +130,22 @@ public static class PrototypeBuilder
         var go = new GameObject("Player");
         go.transform.position = position;
         AddCharacterPhysics(go);
-        Transform visual = CreateVisual(go.transform, PlayerColor, 3);
+        Transform visual = CreateVisual(go.transform, character.idle, 3, -CharacterSize.y / 2f + 0.02f);
         Transform groundCheck = Child(go.transform, "GroundCheck", new Vector3(0f, -0.5f)).transform;
         var walkDust = (GameObject)PrefabUtility.InstantiatePrefab(fx.walkDust.gameObject, groundCheck);
 
         var machine = Child(go.transform, "StateMachine", Vector3.zero).AddComponent<StateMachine>();
         State idle = AddState<IdleState>(machine.transform, "Idle");
-        SetRef(AddState<RunState>(machine.transform, "Run"), "walkDust", walkDust.GetComponent<ParticleSystem>());
-        SetRef(AddState<JumpState>(machine.transform, "Jump"), "jumpDust", fx.jumpDust);
-        SetRef(AddState<FallState>(machine.transform, "Fall"), "landDust", fx.landDust);
+        SetAnimation(idle, character.idle, 6f, true);
+        State run = AddState<RunState>(machine.transform, "Run");
+        SetRef(run, "walkDust", walkDust.GetComponent<ParticleSystem>());
+        SetAnimation(run, character.run, 16f, true);
+        State jump = AddState<JumpState>(machine.transform, "Jump");
+        SetRef(jump, "jumpDust", fx.jumpDust);
+        SetAnimation(jump, character.jump, 14f, false);
+        State fall = AddState<FallState>(machine.transform, "Fall");
+        SetRef(fall, "landDust", fx.landDust);
+        SetAnimation(fall, character.fall, 8f, false);
         DeadState dead = AddState<DeadState>(machine.transform, "Dead");
         SetRef(dead, "soulOrb", fx.soulOrb);
         SetRef(dead, "respawnEffect", fx.respawn);
@@ -164,8 +173,10 @@ public static class PrototypeBuilder
     {
         var go = new GameObject("Clone");
         AddCharacterPhysics(go);
-        Transform visual = CreateVisual(go.transform, CloneColor, 2);
-        foreach (SpriteRenderer sr in visual.GetComponentsInChildren<SpriteRenderer>()) sr.sharedMaterial = fx.cloneMaterial;
+        // el clon sale corriendo: la animacion de correr con el material de replica
+        Transform visual = CreateVisual(go.transform, character.run, 2, -CharacterSize.y / 2f + 0.02f);
+        SetFps(visual, 16f);
+        visual.GetComponent<SpriteRenderer>().sharedMaterial = fx.cloneMaterial;
 
         var clone = go.AddComponent<Clone>();
         SetRef(clone, "bodyPrefab", bodyPrefab);
@@ -186,11 +197,14 @@ public static class PrototypeBuilder
     {
         var go = new GameObject("Body");
         go.layer = groundLayer;
-        // el sprite va en un hijo para pegarlo a la rejilla de pixeles sin tocar la fisica
-        GameObject visual = Child(go.transform, "Visual", Vector3.zero);
-        AddSprite(visual, CharacterSize, BodyColor, 1).sharedMaterial = fx.bodyMaterial;
-        visual.AddComponent<PixelSnap>();
-        go.AddComponent<BoxCollider2D>().size = CharacterSize;
+        // al aparecer se encoge en el cubo y se queda asi
+        Transform visual = CreateVisual(go.transform, character.cube, 1, -BodySize.y / 2f);
+        var cube = new SerializedObject(visual.GetComponent<SpriteLoop>());
+        cube.FindProperty("loop").boolValue = false;
+        cube.ApplyModifiedPropertiesWithoutUndo();
+        SetFps(visual, 14f);
+        visual.GetComponent<SpriteRenderer>().sharedMaterial = fx.bodyMaterial;
+        go.AddComponent<BoxCollider2D>().size = BodySize;
 
         // solo cae en vertical, no se puede empujar
         var rb = go.AddComponent<Rigidbody2D>();
@@ -217,13 +231,37 @@ public static class PrototypeBuilder
         col.sharedMaterial = noFriction;
     }
 
-    static Transform CreateVisual(Transform parent, Color color, int order)
+    // el sprite del bicho va en un hijo con el pivote en los pies (feetY), para pegarlo a la rejilla de pixeles
+    // sin tocar la fisica. Lo anima un SpriteLoop
+    static Transform CreateVisual(Transform parent, Sprite[] frames, int order, float feetY)
     {
-        GameObject visual = Child(parent, "Visual", Vector3.zero);
-        AddSprite(visual, CharacterSize, color, order);
+        GameObject visual = Child(parent, "Visual", new Vector3(0f, feetY));
+        var sr = visual.AddComponent<SpriteRenderer>();
+        sr.sprite = frames[0];
+        sr.sortingOrder = order;
+        var animation = visual.AddComponent<SpriteLoop>();
+        SetArray(animation, "frames", frames);
+        var so = new SerializedObject(animation);
+        so.FindProperty("randomStart").boolValue = false;
+        so.ApplyModifiedPropertiesWithoutUndo();
         visual.AddComponent<PixelSnap>();
-        AddSprite(Child(visual.transform, "Eye", new Vector3(0.2f, 0.25f)), new Vector2(0.15f, 0.15f), EyeColor, order + 1);
         return visual.transform;
+    }
+
+    static void SetFps(Transform visual, float fps)
+    {
+        var so = new SerializedObject(visual.GetComponent<SpriteLoop>());
+        so.FindProperty("fps").floatValue = fps;
+        so.ApplyModifiedPropertiesWithoutUndo();
+    }
+
+    static void SetAnimation(State state, Sprite[] frames, float fps, bool loop)
+    {
+        SetArray(state, "frames", frames);
+        var so = new SerializedObject(state);
+        so.FindProperty("fps").floatValue = fps;
+        so.FindProperty("loop").boolValue = loop;
+        so.ApplyModifiedPropertiesWithoutUndo();
     }
 
     static void Block(Transform parent, string name, float x0, float y0, float x1, float y1)
@@ -328,6 +366,15 @@ public static class PrototypeBuilder
     static T AddState<T>(Transform machine, string name) where T : State
     {
         return Child(machine, name, Vector3.zero).AddComponent<T>();
+    }
+
+    static void SetArray(Object target, string field, Object[] values)
+    {
+        var so = new SerializedObject(target);
+        SerializedProperty list = so.FindProperty(field);
+        list.arraySize = values.Length;
+        for (int i = 0; i < values.Length; i++) list.GetArrayElementAtIndex(i).objectReferenceValue = values[i];
+        so.ApplyModifiedPropertiesWithoutUndo();
     }
 
     static void SetRef(Object target, string field, Object value)

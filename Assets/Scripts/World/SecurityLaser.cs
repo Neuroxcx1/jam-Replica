@@ -10,13 +10,25 @@ public class SecurityLaser : MonoBehaviour
     [SerializeField] SpriteRenderer beam;
     [SerializeField] Transform impact;
     [SerializeField] Light2D beamLight;
+    [SerializeField] Transform receiver;
 
     [Header("Intermitente (onTime 0 = siempre encendido)")]
+    [Tooltip("Segundos encendido (0 = siempre encendido)")]
     [SerializeField] float onTime;
+    [Tooltip("Segundos apagado")]
     [SerializeField] float offTime = 1f;
+    [Tooltip("Retraso: con varios seguidos, ponles retrasos distintos")]
     [SerializeField] float startDelay;
 
     float timer;
+
+    // el receptor va donde el rayo choca con la pared: asi el prefab vale para cualquier altura
+    void Start()
+    {
+        if (receiver == null) return;
+        RaycastHit2D wall = Physics2D.Raycast(transform.position, transform.up, maxLength, LayerMask.GetMask("Ground"));
+        if (wall) receiver.position = wall.point;
+    }
 
     void Update()
     {

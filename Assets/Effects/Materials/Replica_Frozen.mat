@@ -54,12 +54,12 @@ Material:
         m_Offset: {x: 0, y: 0}
     m_Ints: []
     m_Floats:
-    - _EdgeAmount: 1
+    - _EdgeAmount: 0
     - _Flash: 0
     - _FlickerAmount: 0
     - _Opacity: 1
     - _PixelsPerUnit: 32
-    - _RampAmount: 1
+    - _RampAmount: 0
     - _RampSteps: 4
     - _ScanAmount: 0
     - _ScanSpeed: 12

@@ -1,0 +1,754 @@
+fileFormatVersion: 2
+guid: 629ef84e99e80ad4ba9b49a2e4806d5d
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: 6727921915254611459
+    second: Bicho_0
+  - first:
+      213: 6531601720731967718
+    second: Bicho_1
+  - first:
+      213: -4453584462143230811
+    second: Bicho_2
+  - first:
+      213: 949172661050160262
+    second: Bicho_3
+  - first:
+      213: -2429242054625875960
+    second: Bicho_4
+  - first:
+      213: 2461124463042249167
+    second: Bicho_5
+  - first:
+      213: 9148660293960470522
+    second: Bicho_6
+  - first:
+      213: 7192481719059247284
+    second: Bicho_7
+  - first:
+      213: 4090653909929449193
+    second: Bicho_8
+  - first:
+      213: -3901496979609554999
+    second: Bicho_9
+  - first:
+      213: -1780248538980159186
+    second: Bicho_10
+  - first:
+      213: -9026776468950357801
+    second: Bicho_11
+  - first:
+      213: -8647679796915866160
+    second: Bicho_12
+  - first:
+      213: -4697314775606413848
+    second: Bicho_13
+  - first:
+      213: -5843984346559520746
+    second: Bicho_14
+  - first:
+      213: -6540220593199465348
+    second: Bicho_15
+  - first:
+      213: 2095701127033973027
+    second: Bicho_16
+  - first:
+      213: 2790278276293229796
+    second: Bicho_17
+  - first:
+      213: 622710299305389945
+    second: Bicho_18
+  - first:
+      213: -2141016826755913854
+    second: Bicho_19
+  - first:
+      213: 5664932161068844375
+    second: Bicho_20
+  - first:
+      213: -2049778031406797165
+    second: Bicho_21
+  - first:
+      213: 6595374777043968062
+    second: Bicho_22
+  - first:
+      213: 9169448975242859771
+    second: Bicho_23
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 0
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 2
+  spriteExtrude: 1
+  spriteMeshType: 0
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 32
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 0
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: WebGL
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: Bicho_10
+      rect:
+        serializedVersion: 2
+        x: 460
+        y: 0
+        width: 46
+        height: 46
+      alignment: 9
+      pivot: {x: 0.5, y: 0.17391305}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e21fd2ec2694b47e0800000000000000
+      internalID: -1780248538980159186
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bicho_11
+      rect:
+        serializedVersion: 2
+        x: 506
+        y: 0
+        width: 46
+        height: 46
+      alignment: 9
+      pivot: {x: 0.5, y: 0.13043478}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7d8eb5d90a27ab280800000000000000
+      internalID: -9026776468950357801
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bicho_12
+      rect:
+        serializedVersion: 2
+        x: 552
+        y: 0
+        width: 46
+        height: 46
+      alignment: 9
+      pivot: {x: 0.5, y: 0.08695652}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 0d5f185ca054df780800000000000000
+      internalID: -8647679796915866160
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bicho_13
+      rect:
+        serializedVersion: 2
+        x: 598
+        y: 0
+        width: 46
+        height: 46
+      alignment: 9
+      pivot: {x: 0.5, y: 0.08695652}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 8e539c95919cfceb0800000000000000
+      internalID: -4697314775606413848
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bicho_14
+      rect:
+        serializedVersion: 2
+        x: 644
+        y: 0
+        width: 46
+        height: 46
+      alignment: 9
+      pivot: {x: 0.5, y: 0.08695652}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 6106066133ff5eea0800000000000000
+      internalID: -5843984346559520746
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bicho_15
+      rect:
+        serializedVersion: 2
+        x: 690
+        y: 0
+        width: 46
+        height: 46
+      alignment: 9
+      pivot: {x: 0.5, y: 0.08695652}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c7cb6a5a5087c35a0800000000000000
+      internalID: -6540220593199465348
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bicho_16
+      rect:
+        serializedVersion: 2
+        x: 736
+        y: 0
+        width: 46
+        height: 46
+      alignment: 9
+      pivot: {x: 0.5, y: 0.08695652}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 329ee30521d651d10800000000000000
+      internalID: 2095701127033973027
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bicho_17
+      rect:
+        serializedVersion: 2
+        x: 782
+        y: 0
+        width: 46
+        height: 46
+      alignment: 9
+      pivot: {x: 0.5, y: 0.13043478}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 4ec72fa0f4f09b620800000000000000
+      internalID: 2790278276293229796
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bicho_18
+      rect:
+        serializedVersion: 2
+        x: 828
+        y: 0
+        width: 46
+        height: 46
+      alignment: 9
+      pivot: {x: 0.5, y: 0.13043478}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 97f231cc7bf44a800800000000000000
+      internalID: 622710299305389945
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bicho_19
+      rect:
+        serializedVersion: 2
+        x: 874
+        y: 0
+        width: 46
+        height: 46
+      alignment: 9
+      pivot: {x: 0.5, y: 0.13043478}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 28764172a849942e0800000000000000
+      internalID: -2141016826755913854
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bicho_20
+      rect:
+        serializedVersion: 2
+        x: 920
+        y: 0
+        width: 46
+        height: 46
+      alignment: 9
+      pivot: {x: 0.5, y: 0.13043478}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 755c13159c1ed9e40800000000000000
+      internalID: 5664932161068844375
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bicho_21
+      rect:
+        serializedVersion: 2
+        x: 966
+        y: 0
+        width: 46
+        height: 46
+      alignment: 9
+      pivot: {x: 0.5, y: 0.13043478}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 39e29999db9bd83e0800000000000000
+      internalID: -2049778031406797165
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bicho_22
+      rect:
+        serializedVersion: 2
+        x: 1012
+        y: 0
+        width: 46
+        height: 46
+      alignment: 9
+      pivot: {x: 0.5, y: 0.13043478}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e30e64a7a6a778b50800000000000000
+      internalID: 6595374777043968062
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bicho_23
+      rect:
+        serializedVersion: 2
+        x: 1058
+        y: 0
+        width: 46
+        height: 46
+      alignment: 9
+      pivot: {x: 0.5, y: 0.13043478}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: bf49b6bd24d604f70800000000000000
+      internalID: 9169448975242859771
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bicho_00
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 0
+        width: 46
+        height: 46
+      alignment: 9
+      pivot: {x: 0.5, y: 0.13043478}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: e4848b935c1965d40bbeb70595235d07
+      internalID: -569290846
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bicho_01
+      rect:
+        serializedVersion: 2
+        x: 46
+        y: 0
+        width: 46
+        height: 46
+      alignment: 9
+      pivot: {x: 0.5, y: 0.13043478}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 6727897d18da0654f9a21835229d5743
+      internalID: 1677753182
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bicho_02
+      rect:
+        serializedVersion: 2
+        x: 92
+        y: 0
+        width: 46
+        height: 46
+      alignment: 9
+      pivot: {x: 0.5, y: 0.1521739}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: a04f0768f1f2f28469f9f3b0e90fa7eb
+      internalID: -2007072195
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bicho_03
+      rect:
+        serializedVersion: 2
+        x: 138
+        y: 0
+        width: 46
+        height: 46
+      alignment: 9
+      pivot: {x: 0.5, y: 0.10869565}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: f5cf9744f87072e4fbd21d204446543c
+      internalID: 64235443
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bicho_04
+      rect:
+        serializedVersion: 2
+        x: 184
+        y: 0
+        width: 46
+        height: 46
+      alignment: 9
+      pivot: {x: 0.5, y: 0.13043478}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 587a7d433e04cfd45809d244f4637230
+      internalID: 1147256444
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bicho_05
+      rect:
+        serializedVersion: 2
+        x: 230
+        y: 0
+        width: 46
+        height: 46
+      alignment: 9
+      pivot: {x: 0.5, y: 0.10869565}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 551456c228956584f8711c9f50f51764
+      internalID: 1008340957
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bicho_06
+      rect:
+        serializedVersion: 2
+        x: 276
+        y: 0
+        width: 46
+        height: 46
+      alignment: 9
+      pivot: {x: 0.5, y: 0.10869565}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: c554ff829472f91469b3533a60567520
+      internalID: 556388045
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bicho_07
+      rect:
+        serializedVersion: 2
+        x: 322
+        y: 0
+        width: 46
+        height: 46
+      alignment: 9
+      pivot: {x: 0.5, y: 0.1521739}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 13cc3d54c33095e4886f00844ec8b964
+      internalID: 1134111333
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bicho_08
+      rect:
+        serializedVersion: 2
+        x: 368
+        y: 0
+        width: 46
+        height: 46
+      alignment: 9
+      pivot: {x: 0.5, y: 0.13043478}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 0337b6aec905aaa47978eb0bb71fe97c
+      internalID: -998629484
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bicho_09
+      rect:
+        serializedVersion: 2
+        x: 414
+        y: 0
+        width: 46
+        height: 46
+      alignment: 9
+      pivot: {x: 0.5, y: 0.13043478}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: de94e807fab0e184f9fdaa45c19ee45a
+      internalID: 552394785
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: 127b36a726c9d3942b6edcd2d7c371b4
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries: []
+    nameFileIdTable:
+      Bicho_00: -569290846
+      Bicho_01: 1677753182
+      Bicho_02: -2007072195
+      Bicho_03: 64235443
+      Bicho_04: 1147256444
+      Bicho_05: 1008340957
+      Bicho_06: 556388045
+      Bicho_07: 1134111333
+      Bicho_08: -998629484
+      Bicho_09: 552394785
+      Bicho_10: -1780248538980159186
+      Bicho_11: -9026776468950357801
+      Bicho_12: -8647679796915866160
+      Bicho_13: -4697314775606413848
+      Bicho_14: -5843984346559520746
+      Bicho_15: -6540220593199465348
+      Bicho_16: 2095701127033973027
+      Bicho_17: 2790278276293229796
+      Bicho_18: 622710299305389945
+      Bicho_19: -2141016826755913854
+      Bicho_20: 5664932161068844375
+      Bicho_21: -2049778031406797165
+      Bicho_22: 6595374777043968062
+      Bicho_23: 9169448975242859771
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

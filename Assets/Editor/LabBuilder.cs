@@ -15,9 +15,10 @@ using UnityEngine.UI;
 // Monta la escena "Laboratorio": 3 zonas seguidas pintadas con la Tile Palette "Laboratorio",
 // con sus trampas, puertas y luces, y antes la escena "Intro": la sala del tanque donde empiezas.
 // Luego todo se puede retocar a mano (pintar tiles, mover trampas...), pero volver a ejecutar esto borra esos cambios.
+// El nivel tutorial y los prefabs de sus elementos estan en LabBuilder.Tutorial.cs (Replica > Crear nivel tutorial).
 //
 // Coordenadas: 1 unidad = 1 tile de 32 px. (x, y) es la casilla; y crece hacia arriba.
-public static class LabBuilder
+public static partial class LabBuilder
 {
     const string ScenePath = "Assets/Scenes/Laboratorio.unity";
     const string IntroPath = "Assets/Scenes/Intro.unity";
@@ -69,12 +70,7 @@ public static class LabBuilder
     {
         var scene = PrototypeBuilder.NewSceneFromTemplate(ScenePath);
         Player player = PrototypeBuilder.CreatePlayerAndPrefabs(new Vector3(4.5f, 6.5f));
-
-        ground = PrototypeBuilder.GroundLayer;
-        noRaycast = LayerMask.NameToLayer("Ignore Raycast");
-        unlit = AssetDatabase.LoadAssetAtPath<Material>("Packages/com.unity.render-pipelines.universal/Runtime/Materials/Sprite-Unlit-Default.mat");
-        lines = AssetDatabase.LoadAssetAtPath<Material>("Assets/Effects/Materials/FX_Pixel.mat");
-        waste = CreateWasteMaterial();
+        LoadCommon();
 
         NewMap(Width, Height);
         Containment();
@@ -86,10 +82,20 @@ public static class LabBuilder
         SetupCamera(player, Width);
         SetupPostProcessing();
         Hud();
-        AddAftershock(player);
+        AddAftershock(player, 2f, 32f, 16.8f);
 
         EditorSceneManager.SaveScene(scene);
         PrototypeBuilder.AddSceneToBuildSettings(ScenePath, true);
+    }
+
+    // capas y materiales que usan todas las escenas (despues de crear el jugador, que crea la capa Ground)
+    static void LoadCommon()
+    {
+        ground = LayerMask.NameToLayer("Ground");
+        noRaycast = LayerMask.NameToLayer("Ignore Raycast");
+        unlit = AssetDatabase.LoadAssetAtPath<Material>("Packages/com.unity.render-pipelines.universal/Runtime/Materials/Sprite-Unlit-Default.mat");
+        lines = AssetDatabase.LoadAssetAtPath<Material>("Assets/Effects/Materials/FX_Pixel.mat");
+        waste = CreateWasteMaterial();
     }
 
     // todo es roca y las salas se excavan
@@ -137,7 +143,7 @@ public static class LabBuilder
         Prop("consola", 35.5f, 6, false);
         Prop("escritorio", 38f, 6, false);
         Prop("ordenador", 40.5f, 6, false);
-        Terminal(36.5f, 11);
+        Prop("consola", 36.5f, 11, false);
         Prop("escritorio", 39.5f, 11, false);
         // los controles, pegados en la pared del corral donde empiezas
         AddSprite(NewObject(decor, "Cartel de controles", new Vector3(6.5f, 9.5f), 0), art.controlsSign, -9);
@@ -181,7 +187,7 @@ public static class LabBuilder
         Prop("consola", 67f, 4, false);
         Prop("cajas", 70.5f, 4, true);
         Prop("ordenador", 76f, 4, false);
-        Terminal(80.5f, 4);
+        Prop("consola", 80.5f, 4, false);
 
         Lamp(48f, 16, false);
         Lamp(56f, 16, true);
@@ -241,7 +247,7 @@ public static class LabBuilder
     // ---------- sala del tanque (escena Intro) ----------
     // Una sala propia antes del laboratorio: el tanque del especimen (tu) en medio, cientificos trabajando
     // alrededor y otros pasando por delante de la camara. Tras la cinematica (IntroCinematic) caminas hacia
-    // la derecha; al cruzar la puerta empieza el laboratorio.
+    // la derecha; al cruzar la puerta empieza el nivel tutorial.
     static void BuildIntro()
     {
         const float tankX = 16.5f, floorY = 4f;
@@ -252,16 +258,19 @@ public static class LabBuilder
         Carve(2, 4, 31, 13);           // la sala
         Carve(32, 4, 34, 6);           // pasillo de salida
         AutoDoor(32, 4);
-        var exit = NewObject(traps, "Salida al laboratorio", new Vector3(33.5f, 5.5f), noRaycast);
+        var exit = NewObject(traps, "Salida al tutorial", new Vector3(33.5f, 5.5f), noRaycast);
         var trigger = exit.AddComponent<BoxCollider2D>();
         trigger.isTrigger = true;
         trigger.size = new Vector2(1f, 3f);
-        exit.AddComponent<SceneDoor>();
-        AddSprite(NewObject(decor, "Cartel de moverse", new Vector3(21f, 7.5f), 0), art.moveSign, -9);
+        var sceneDoor = exit.AddComponent<SceneDoor>();
+        var door = new SerializedObject(sceneDoor);
+        door.FindProperty("scene").stringValue = "Nivel Tutorial";
+        door.ApplyModifiedPropertiesWithoutUndo();
+        Cartel(21f, 7.5f, "CONTROLES", (Sign.Control.Moverse, "MOVERSE"));
 
         Prop("escritorio", 5f, 4, false);
         Prop("ordenador", 7.5f, 4, false);
-        Terminal(10.5f, 4);
+        Prop("ordenador", 10.5f, 4, false);
         Prop("consola", 21f, 4, false);
         Prop("tanque", 24.5f, 4, false);
         Prop("barriles", 27f, 4, false);
@@ -299,6 +308,9 @@ public static class LabBuilder
         // el apagon afecta a toda la sala menos al tanque y al jugador
         var intro = NewObject(decor, "Cinematica", new Vector3(tankX, floorY), 0).AddComponent<IntroCinematic>();
         SetRef(intro, "player", player);
+        // en el tanque esta tieso (el cubo congelado) y al salir se despliega: la animacion de hacerse cubo al reves
+        LabAssets.Character bicho = PrototypeBuilder.Character;
+        SetArray(intro, "wakeUp", new[] { bicho.frozenCube[4], bicho.cube[4], bicho.cube[3], bicho.cube[2], bicho.cube[1], bicho.cube[0] });
         SetRef(intro, "tank", tank);
         SetArray(intro, "scientists", scientists);
         SetRef(intro, "dust", Dust(2f, 32f, 13.8f));
@@ -370,13 +382,14 @@ public static class LabBuilder
         // tamaños multiplos de 8 (la letra es pixel art de 8): asi se ve nitida
         MenuText(go.transform, "Titulo", "REPLICA", 96, new Vector2(160f, 160f), Color.white, font);
         Button start = MenuButton(go.transform, "INICIAR", new Vector2(160f, -16f), font);
-        Button quit = MenuButton(go.transform, "SALIR", new Vector2(160f, -88f), font);
-        MenuText(go.transform, "Ayuda", "W S / FLECHAS     ENTER", 24, new Vector2(164f, -400f), new Color(1f, 1f, 1f, 0.4f), font);
+        Button options = MenuButton(go.transform, "OPCIONES", new Vector2(160f, -88f), font);
+        Button quit = MenuButton(go.transform, "SALIR", new Vector2(160f, -160f), font);
         new GameObject("EventSystem", typeof(EventSystem), typeof(InputSystemUIInputModule));
 
         var menu = go.AddComponent<TitleMenu>();
         SetRef(menu, "intro", intro);
         SetRef(menu, "startButton", start);
+        SetRef(menu, "optionsButton", options);
         SetRef(menu, "quitButton", quit);
         SetRef(menu, "group", group);
         return go;
@@ -447,6 +460,14 @@ public static class LabBuilder
         SetRef(tank, "splash", Burst(go.transform, "Salpicadura", new Vector3(x, floorY + 1.2f), new Vector2(2.4f, 1.6f), 70,
             new Color(0.45f, 1f, 0.6f), new Color(0.15f, 0.6f, 0.3f)));
         SetRef(tank, "glow", glow);
+
+        // el burbujeo del tanque, hasta que revienta
+        var sound = go.AddComponent<AudioSource>();
+        sound.clip = AssetDatabase.LoadAssetAtPath<AudioClip>("Assets/Sounds/Intro/Sonido de tanque de agua (bucle).wav");
+        sound.outputAudioMixerGroup = MixerGroup("Efectos");
+        sound.loop = true;
+        sound.volume = 0.6f;
+        SetRef(tank, "bubbleSound", sound);
         return tank;
     }
 
@@ -613,11 +634,11 @@ public static class LabBuilder
         var loop = go.AddComponent<SpriteLoop>();
         SetArray(loop, "frames", new[] { open });
 
-        // el trigger esta en la casilla de despues: la puerta se cierra cuando ya has pasado
+        // el trigger cubre la puerta y una casilla a cada lado: se cierra cuando ya has pasado
         var trigger = go.AddComponent<BoxCollider2D>();
         trigger.isTrigger = true;
-        trigger.size = new Vector2(1f, 2f);
-        trigger.offset = new Vector2(1.5f, 1f);
+        trigger.size = new Vector2(3f, 2f);
+        trigger.offset = new Vector2(0f, 1f);
 
         var blocker = NewObject(go.transform, "Bloqueo", go.transform.position, ground).AddComponent<BoxCollider2D>();
         blocker.size = new Vector2(1f, 2f);
@@ -655,6 +676,7 @@ public static class LabBuilder
     // puerta de seguridad cerrada (solo decorado, la pared sigue ahi): explica por que no se puede pasar
     static void LockedDoor(int x, int y)
     {
+        Fill(x, y + 3, x, (int)FirstSolidAbove(x, y) - 1);
         var go = NewObject(decor, "Puerta bloqueada", new Vector3(x + 0.5f, y), 0);
         AddSprite(go, art.autoDoor, 1);
         AddLight(go.transform, "Piloto", new Vector3(x + 0.5f, y + 2.6f), AlarmColor, 0.7f, 2f);
@@ -697,18 +719,24 @@ public static class LabBuilder
 
     static void Turret(int x, int floorY)
     {
-        var go = NewObject(traps, "Torreta", new Vector3(x + 0.5f, floorY), ground);
+        Place(LevelPrefab("Torreta", CreateTurret), x + 0.5f, floorY);
+    }
+
+    // torreta de seguridad, dibujada mirando a la izquierda (Facing Right la voltea)
+    static GameObject CreateTurret()
+    {
+        var go = NewObject(null, "Torreta", Vector3.zero, ground);
         SpriteRenderer body = AddSprite(go, art.turret[0], 2);
         var col = go.AddComponent<BoxCollider2D>();
         col.size = new Vector2(0.95f, 0.75f);
         col.offset = new Vector2(0f, 0.375f);
 
-        Transform muzzle = NewObject(go.transform, "Canon", new Vector3(x - 0.1f, floorY + 0.5f), 0).transform;
+        Transform muzzle = NewObject(go.transform, "Canon", new Vector3(-0.6f, 0.5f), 0).transform;
         LineRenderer sight = Line(go.transform, "Mira", 1f / 32f);
         LineRenderer bolt = Line(go.transform, "Rayo", 2f / 32f);
         bolt.startColor = bolt.endColor = new Color(0.85f, 0.95f, 1f);
         Light2D flash = AddLight(muzzle, "Fogonazo", muzzle.position, new Color(0.7f, 0.85f, 1f), 2.2f, 4f);
-        AddLight(go.transform, "Piloto", new Vector3(x + 0.5f, floorY + 0.6f), AlarmColor, 0.5f, 1.5f);
+        AddLight(go.transform, "Piloto", new Vector3(0f, 0.6f), AlarmColor, 0.5f, 1.5f);
 
         var turret = go.AddComponent<Turret>();
         SetRef(turret, "muzzle", muzzle);
@@ -722,6 +750,7 @@ public static class LabBuilder
         so.FindProperty("sightMask").intValue = (1 << ground) | 1;
         so.FindProperty("targetMask").intValue = 1;
         so.ApplyModifiedPropertiesWithoutUndo();
+        return go;
     }
 
     // suelo electrificado de x0 a x1 encima del suelo que esta a la altura floorY
@@ -1081,27 +1110,21 @@ public static class LabBuilder
         col.offset = new Vector2(0f, size.y / 2f);
     }
 
-    static void Terminal(float x, float y)
-    {
-        var go = NewObject(decor, "Terminal", new Vector3(x, y), 0);
-        AddSprite(go, art.terminal[0], -8);
-        Animate(go, art.terminal, 8f);
-        AddLight(go.transform, "Pantalla", new Vector3(x + 0.2f, y + 0.6f), AlarmColor, 0.5f, 1.5f);
-    }
-
     // fluorescente de techo: carcasa, tubo que brilla y un cono de luz hacia abajo
-    static void Lamp(float x, float ceilingY, bool flicker)
+    static void Lamp(float x, float ceilingY, bool flicker) => Lamp(x, ceilingY, flicker, LampColor);
+
+    static void Lamp(float x, float ceilingY, bool flicker, Color color)
     {
         var go = NewObject(lights, "Fluorescente", new Vector3(x, ceilingY), 0);
         AddSprite(go, art.lamp, -5);
         var tube = NewObject(go.transform, "Tubo", new Vector3(x, ceilingY - 3f / 32f), 0);
         SpriteRenderer tubeSr = AddSprite(tube, art.lampTube, -4);
         tubeSr.sharedMaterial = unlit;
-        tubeSr.color = LampColor;
+        tubeSr.color = color;
 
         // el cono llega hasta el suelo que tenga debajo
         float reach = ceilingY - FloorBelow(Mathf.FloorToInt(x), (int)ceilingY - 1);
-        Light2D light = AddLight(go.transform, "Luz", new Vector3(x, ceilingY - 0.2f), LampColor, 1.1f, reach + 1.5f);
+        Light2D light = AddLight(go.transform, "Luz", new Vector3(x, ceilingY - 0.2f), color, 1.1f, reach + 1.5f);
         light.transform.rotation = Quaternion.Euler(0f, 0f, 180f);
         light.pointLightInnerAngle = 50f;
         light.pointLightOuterAngle = 120f;
@@ -1140,7 +1163,7 @@ public static class LabBuilder
         so.ApplyModifiedPropertiesWithoutUndo();
     }
 
-    static void SetupLighting(Player player)
+    static void SetupLighting(Player player, bool ownLight = true)
     {
         // ambiente bajo y frio: las salas solo se ven bien donde hay lamparas
         foreach (Light2D light in Object.FindObjectsByType<Light2D>())
@@ -1151,7 +1174,7 @@ public static class LabBuilder
         }
 
         // un poco de luz alrededor del jugador para que siempre se lea
-        AddLight(player.transform, "Luz propia", player.transform.position, new Color(1f, 0.93f, 0.86f), 0.35f, 2.5f);
+        if (ownLight) AddLight(player.transform, "Luz propia", player.transform.position, new Color(1f, 0.93f, 0.86f), 0.5f, 2.5f);
     }
 
     static void SetupPostProcessing()
@@ -1184,24 +1207,22 @@ public static class LabBuilder
         volume.sharedProfile = profile;
     }
 
-    // al entrar desde la sala del tanque, una replica del temblor: polvo y parpadeo en lo que se ve al empezar
-    static void AddAftershock(Player player)
+    // al entrar desde la sala del tanque, una replica del temblor: polvo (de x0 a x1 bajo el techo y) y parpadeo
+    // en las luces que se ven al empezar
+    static void AddAftershock(Player player, float x0, float x1, float y)
     {
-        var shock = NewObject(decor, "Replica del temblor", new Vector3(17f, 16.8f), 0).AddComponent<Aftershock>();
-        SetRef(shock, "dust", Dust(2f, 32f, 16.8f));
+        var shock = NewObject(decor, "Replica del temblor", new Vector3((x0 + x1) / 2f, y), 0).AddComponent<Aftershock>();
+        SetRef(shock, "dust", Dust(x0, x1, y));
         SetArray(shock, "lights", Object.FindObjectsByType<Light2D>()
-            .Where(l => l.lightType != Light2D.LightType.Global && l.transform.position.x < 32f && !l.transform.IsChildOf(player.transform))
+            .Where(l => l.lightType != Light2D.LightType.Global && l.transform.position.x < x1 && !l.transform.IsChildOf(player.transform))
             .ToArray());
     }
 
     // la interfaz (contador de replicas y panel de victoria) va en el prefab HUD: se retoca ahi y no se pierde al regenerar
+    // la puerta final busca sola el panel "Ganaste" del HUD
     static void Hud()
     {
-        var hud = (GameObject)PrefabUtility.InstantiatePrefab(AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Prefabs/HUD.prefab"));
-        GameObject panel = hud.GetComponentsInChildren<Transform>(true).First(t => t.name == "Ganaste").gameObject;
-        var door = Object.FindAnyObjectByType<FinalDoor>();
-        SetRef(door, "victoryPanel", panel);
-        SetRef(door, "victoryAnimator", panel.GetComponent<Animator>());
+        PrefabUtility.InstantiatePrefab(AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Prefabs/HUD.prefab"));
     }
 
     static T AddOverride<T>(VolumeProfile profile) where T : VolumeComponent

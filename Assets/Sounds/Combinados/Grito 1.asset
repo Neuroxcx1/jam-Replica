@@ -1,0 +1,24 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f842283e707a0eb702dd1baceb74c5fb, type: 3}
+  m_Name: Grito 1
+  m_EditorClassIdentifier: Assembly-CSharp::SoundMix
+  output: {fileID: 24300020, guid: 7d1b0cb1d39ec18ed87a50a06b5262f3, type: 2}
+  volume: 1
+  layers:
+  - clip: {fileID: 8300000, guid: 57e398cbcfb82c948af07f622ae3107e, type: 3}
+    delay: 0
+    volume: 0.35
+    pitch: 1
+    start: 0
+    length: 1
+    fadeOut: 0.35

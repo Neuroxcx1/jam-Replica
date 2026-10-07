@@ -1,5 +1,10 @@
 public class IdleState : PlayerState
 {
+    public override void Enter()
+    {
+        PlayAnimation();
+    }
+
     public override void UpdateState(float delta)
     {
         if (player.CanJump()) TransitionTo("jump");

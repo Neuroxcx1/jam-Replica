@@ -14,6 +14,7 @@ public class FallState : PlayerState
 
     public override void Enter()
     {
+        PlayAnimation();
         fastestFall = 0f;
     }
 

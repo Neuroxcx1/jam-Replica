@@ -9889,6 +9889,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BodyEffect
   bodyMaterial: {fileID: 2100000, guid: adf7fac2f1f7b7543b8dc1f6d52f91e6, type: 2}
+  bodyFrames: []
   decal: {fileID: 0}
   decalGrowTime: 0.3
   flashTime: 0.2

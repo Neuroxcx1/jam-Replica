@@ -42,6 +42,8 @@ public class Player : MonoBehaviour
     public Rigidbody2D Rb { get; private set; }
     public Vector3 Feet => groundCheck.position;
     public Vector3 Checkpoint => checkpoint;
+    // al volver al checkpoint despues de morir (el cristal se recompone con esto)
+    public event System.Action Respawned;
     public float MoveInput { get; private set; }
     public float BaseGravity => gravity;
     public bool JumpHeld => jumpAction.IsPressed();
@@ -92,6 +94,8 @@ public class Player : MonoBehaviour
 
     void Update()
     {
+        if (GameMenus.Paused) return;
+
         // K: reinicia el nivel entero
         if (restartAction.WasPressedThisFrame())
         {
@@ -101,7 +105,10 @@ public class Player : MonoBehaviour
 
         if (IsDead) return;
 
-        MoveInput = moveAction.ReadValue<Vector2>().x;
+        // el stick del mando rebota un poco hacia el otro lado al soltarlo: solo cuenta pasada la mitad,
+        // y entonces a tope, como las teclas (si no, al soltarlo yendo a la izquierda te giraba a la derecha)
+        float x = moveAction.ReadValue<Vector2>().x;
+        MoveInput = Mathf.Abs(x) < 0.5f ? 0f : Mathf.Sign(x);
         if (MoveInput != 0)
         {
             facing = MoveInput > 0 ? 1 : -1;
@@ -176,19 +183,21 @@ public class Player : MonoBehaviour
         CameraFollow.Shake(replicateShake, 0.15f);
     }
 
-    // deja una copia congelada donde estas y te subes encima de ella.
+    // deja una copia congelada (el cubo) donde tienes los pies y te subes encima de ella.
     // Si no cabes encima (techo justo arriba), la atraviesas y caes
     void Freeze()
     {
         // la posicion de la fisica: la del sprite va un poco por detras (interpolacion) y al caer rapido se nota
-        Vector2 at = Rb.position;
+        float half = bodyPrefab.GetComponent<BoxCollider2D>().size.y / 2f;
+        Vector2 at = Rb.position + Vector2.down * (col.bounds.extents.y - half);
         ReplicasLeft--;
         GameObject body = Instantiate(bodyPrefab, at, Quaternion.identity);
         body.GetComponent<Rigidbody2D>().bodyType = RigidbodyType2D.Static;
+        body.GetComponent<Body>().Frozen = true;
         if (freezeEffect != null) Instantiate(freezeEffect, at, Quaternion.identity).Attach(body);
         placed.Add(body);
 
-        Vector2 top = at + Vector2.up * (body.GetComponent<BoxCollider2D>().size.y + 0.02f);
+        Vector2 top = at + Vector2.up * (half + col.bounds.extents.y + 0.02f);
         if (Physics2D.OverlapBox(top, col.bounds.size * 0.95f, 0f, groundLayer) == null)
         {
             Rb.position = top;
@@ -212,11 +221,16 @@ public class Player : MonoBehaviour
         placed.RemoveAll(piece => piece == null);
         if (placed.Count == 0) return;
 
-        GameObject oldest = placed[0];
-        placed.RemoveAt(0);
-        if (recallEffect != null) Instantiate(recallEffect, oldest.transform.position, Quaternion.identity);
-        if (recallGhost != null) Instantiate(recallGhost).Fly(oldest.GetComponentInChildren<SpriteRenderer>(), transform);
-        Destroy(oldest);
+        Return(placed[0]);
+    }
+
+    // esa copia vuelve como replica (con Q la mas antigua; el montacargas devuelve el hielo que rompe)
+    public void Return(GameObject piece, bool ghost = true)
+    {
+        if (!placed.Remove(piece)) return;
+        if (recallEffect != null) Instantiate(recallEffect, piece.transform.position, Quaternion.identity);
+        if (ghost && recallGhost != null) Instantiate(recallGhost).Fly(piece.GetComponentInChildren<SpriteRenderer>(), transform);
+        Destroy(piece);
         ReplicasLeft = Mathf.Min(maxReplicas, ReplicasLeft + 1);
     }
 
@@ -233,7 +247,16 @@ public class Player : MonoBehaviour
         if (IsDead) return;
 
         if (deathEffect != null) Instantiate(deathEffect, transform.position, Quaternion.identity);
+        // todas tus copias (clones, cuerpos y hielo) desaparecen y vuelven como replicas: no queda nada tuyo por ahi
+        placed.RemoveAll(piece => piece == null);
+        foreach (GameObject piece in placed.ToArray()) Return(piece, false);
         stateMachine.ChangeState("dead");
+    }
+
+    // la animacion del sprite (la piden los estados al entrar)
+    public void Animate(Sprite[] frames, float fps, bool loop)
+    {
+        if (frames != null && frames.Length > 0) visual.GetComponent<SpriteLoop>().Play(frames, loop, fps);
     }
 
     public void SetAlive(bool alive)
@@ -249,6 +272,7 @@ public class Player : MonoBehaviour
         Rb.linearVelocity = Vector2.zero;
         ClearJumpTimers();
         SetAlive(true);
+        Respawned?.Invoke();
     }
 
     public void SetCheckpoint(Vector3 position)

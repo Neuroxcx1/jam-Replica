@@ -3,6 +3,7 @@ using UnityEngine;
 // Cinta transportadora: arrastra todo lo que tenga encima (jugador, replicas y cuerpos sin congelar)
 public class Conveyor : MonoBehaviour
 {
+    [Tooltip("Velocidad: positiva lleva a la derecha, negativa a la izquierda")]
     [SerializeField] float speed = 2.5f;
 
     Collider2D belt;
@@ -10,6 +11,8 @@ public class Conveyor : MonoBehaviour
     void Awake()
     {
         belt = GetComponent<Collider2D>();
+        // con velocidad negativa va hacia la izquierda: los listones se dibujan al reves
+        if (TryGetComponent(out SpriteRenderer sprite)) sprite.flipX = speed < 0f;
     }
 
     void FixedUpdate()

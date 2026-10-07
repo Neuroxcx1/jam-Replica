@@ -1,6 +1,6 @@
 using UnityEngine;
 
-// Animacion por fotogramas para trampas, puertas y decorado (sin Animator)
+// Animacion por fotogramas para trampas, puertas, decorado y el personaje (sin Animator)
 public class SpriteLoop : MonoBehaviour
 {
     [SerializeField] Sprite[] frames;
@@ -20,10 +20,12 @@ public class SpriteLoop : MonoBehaviour
         if (randomStart && loop && frames.Length > 0) time = Random.value * frames.Length / fps;
     }
 
-    public void Play(Sprite[] newFrames, bool loop)
+    // newFps 0 = la velocidad que ya tenia
+    public void Play(Sprite[] newFrames, bool loop, float newFps = 0f)
     {
         frames = newFrames;
         this.loop = loop;
+        if (newFps > 0f) fps = newFps;
         time = 0f;
     }
 

@@ -9,6 +9,8 @@ public class Scientist : MonoBehaviour
     [SerializeField] float lookAtX;            // donde esta el tanque
     [SerializeField] float walkSpeed = 1.1f;
     [SerializeField] float runSpeed = 4.5f;
+    [Tooltip("El grito al salir corriendo (puede ir vacio)")]
+    [SerializeField] SoundMix scream;
 
     SpriteRenderer sr;
     float targetX;
@@ -29,6 +31,7 @@ public class Scientist : MonoBehaviour
         targetX = exitX;
         // cada uno reacciona a su tiempo
         pause = Random.Range(0f, 0.4f);
+        if (scream != null) scream.Play(pause + Random.Range(0f, 0.3f));
     }
 
     void Update()

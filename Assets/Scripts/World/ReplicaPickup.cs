@@ -4,6 +4,7 @@ using UnityEngine;
 // Necesita un collider trigger.
 public class ReplicaPickup : MonoBehaviour
 {
+    [Tooltip("Cuantas replicas de mas da")]
     [SerializeField] int amount = 1;
     [SerializeField] Transform visual;
     [SerializeField] GameObject collectEffect;

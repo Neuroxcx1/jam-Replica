@@ -14,6 +14,12 @@ public static class LabAssets
 {
     const string Source = "Assets/Sprites/Map/Foozle_2DT0001_Science_Fiction_Labs_Tileset";
     const string Generated = "Assets/Sprites/Map/Generado";
+    // el personaje tal cual lo dibujaron (115 px por fotograma) y la version reducida que usa el juego
+    const string CharacterSource = "Assets/Sprites/Personaje/Bicho_original.png";
+    const string CharacterSheet = "Assets/Sprites/Personaje/Bicho.png";
+    // los botones pixel de Kenney (tiles de 16 px): de ahi salen las teclas y los botones del mando de los carteles
+    const string ButtonTiles = "Assets/Buttons/Tiles";
+    const string ControlIconsPath = "Assets/Settings/Iconos de controles.asset";
     const string TilesFolder = "Assets/Tiles";
     const int PPU = 32;
 
@@ -53,9 +59,21 @@ public static class LabAssets
         public Sprite tankRim;
         public Sprite tankBack;
 
-        public Sprite controlsSign;
-        public Sprite moveSign;
+        public Sprite controlsSign;               // el cartel del laboratorio (imagen)
+        public Sprite signPaper;                  // los carteles editables: papel (9-slice) y cinta
+        public Sprite signTape;
+        public ControlIcons controlIcons;         // iconos de teclas y del mando para los carteles
         public Sprite replicaSample;              // muestra de mutageno: una replica mas
+
+        // elementos del nivel (prefabs)
+        public Sprite elevatorCabin;              // ascensor por fuera: se estira por el medio (9-slice)
+        public Sprite elevatorDoors;              // sus puertas, con las ventanitas
+        public Sprite[] terminalOpen;             // el computador de seguridad en verde (abierto)
+        public Sprite securityDoor;
+        public Sprite securityPad;                // placa delante del computador de seguridad
+        public Sprite securityFrame;              // marco blanco que distingue al computador
+        public Sprite liftCage;                   // plataforma del montacargas, con barandas
+        public Sprite liftWeight;                 // su contrapeso
 
         // cinematica del principio
         public Sprite specimenTank;
@@ -101,6 +119,7 @@ public static class LabAssets
         CreateMachineSprites(set);
         CreateSigns(set);
         CreateReplicaSample(set);
+        CreateLevelElements(set);
         CreateIntroSprites(set);
 
         AssetDatabase.SaveAssets();
@@ -508,19 +527,111 @@ public static class LabAssets
             ("Q", "RECUPERAR CLON"),
             ("K", "REINICIAR"),
         });
-        set.moveSign = PaperSign("Cartel_Moverse", "CONTROLES", new[] { ("A D", "MOVERSE") });
+
+        // los carteles editables (componente Sign): el papel se estira por el medio y la cinta va en las esquinas
+        var paper = Canvas(8, 8);
+        Paint(paper, 0, 0, 8, 8, Hex("A9A595"));
+        Paint(paper, 1, 1, 6, 6, Hex("D6D2C4"));
+        set.signPaper = SaveSprite(paper, "Cartel_Papel", new Vector2(0.5f, 0.5f), new Vector4(2f, 2f, 2f, 2f));
+        var tape = Canvas(18, 18);
+        Tape(tape, 9, 9, 1);
+        set.signTape = SaveSprite(tape, "Cartel_Cinta", new Vector2(0.5f, 0.5f));
+        set.controlIcons = CreateControlIcons();
+    }
+
+    // las teclas y los botones del mando de Xbox de los carteles, por nombre. Cada una son uno o varios tiles seguidos
+    // (tile_0235.png...): se juntan en una hoja, Teclas.png, para que las anchas como el espacio sean un solo sprite
+    static ControlIcons CreateControlIcons()
+    {
+        var keys = new List<(string name, int[] tiles)>
+        {
+            ("keyboard_space", new[] { 235, 236, 237 }),
+            ("keyboard_shift", new[] { 255, 256 }),
+            ("keyboard_ctrl", new[] { 221, 222 }),
+            ("keyboard_alt", new[] { 187, 188 }),
+            ("keyboard_tab", new[] { 189, 190 }),
+            ("keyboard_escape", new[] { 17 }),
+            ("keyboard_arrow_up", new[] { 166 }),
+            ("keyboard_arrow_right", new[] { 167 }),
+            ("keyboard_arrow_down", new[] { 168 }),
+            ("keyboard_arrow_left", new[] { 169 }),
+            ("xbox_a", new[] { 4 }),
+            ("xbox_b", new[] { 5 }),
+            ("xbox_x", new[] { 6 }),
+            ("xbox_y", new[] { 7 }),
+            ("xbox_lt", new[] { 551 }),
+            ("xbox_rt", new[] { 552 }),
+            ("xbox_lb", new[] { 553 }),
+            ("xbox_rb", new[] { 554 }),
+            ("xbox_view", new[] { 616 }),
+            ("xbox_menu", new[] { 617 }),
+            ("xbox_stick_l", new[] { 217 }),
+            ("xbox_stick_r", new[] { 285 }),
+        };
+        // las letras, fila a fila del teclado
+        foreach (var (letters, first) in new[] { ("qwertyuiop", 85), ("asdfghjkl", 120), ("zxcvbnm", 155) })
+            for (int i = 0; i < letters.Length; i++) keys.Add(("keyboard_" + letters[i], new[] { first + i }));
+
+        // los tiles sueltos tambien sin suavizado ni compresion, para que no se vean borrosos si se usan en otro sitio
+        AssetDatabase.StartAssetEditing();
+        try
+        {
+            foreach (string guid in AssetDatabase.FindAssets("t:Texture2D", new[] { ButtonTiles }))
+            {
+                var importer = (TextureImporter)AssetImporter.GetAtPath(AssetDatabase.GUIDToAssetPath(guid));
+                if (importer.filterMode == FilterMode.Point && importer.spritePixelsPerUnit == PPU &&
+                    importer.textureCompression == TextureImporterCompression.Uncompressed) continue;
+                importer.filterMode = FilterMode.Point;
+                importer.spritePixelsPerUnit = PPU;
+                importer.textureCompression = TextureImporterCompression.Uncompressed;
+                importer.SaveAndReimport();
+            }
+        }
+        finally { AssetDatabase.StopAssetEditing(); }
+
+        // una tecla por fila, con 2 pixeles libres entre filas
+        var sheet = Canvas(48, keys.Count * 18);
+        var rects = new List<SpriteRect>();
+        for (int k = 0; k < keys.Count; k++)
+        {
+            int[] tiles = keys[k].tiles;
+            for (int t = 0; t < tiles.Length; t++)
+            {
+                var tile = new Texture2D(2, 2);
+                tile.LoadImage(File.ReadAllBytes($"{ButtonTiles}/tile_{tiles[t]:D4}.png"));
+                sheet.SetPixels32(t * 16, k * 18, 16, 16, tile.GetPixels32());
+                Object.DestroyImmediate(tile);
+            }
+            // solo lo que se ve: algunas teclas (Ctrl, Alt) no llenan su ultimo tile. Ancho par, para caer en la rejilla de pixeles
+            int left = tiles.Length * 16, right = -1;
+            for (int x = 0; x < tiles.Length * 16; x++)
+                for (int y = 0; y < 16; y++)
+                    if (sheet.GetPixel(x, k * 18 + y).a > 0f) { left = Mathf.Min(left, x); right = Mathf.Max(right, x); }
+            int width = right - left + 1;
+            width += width % 2;
+            rects.Add(NewRect(keys[k].name, new Rect(left, k * 18, width, 16), new Vector2(0.5f, 0.5f)));
+        }
+        string path = $"{Generated}/Teclas.png";
+        File.WriteAllBytes(path, sheet.EncodeToPNG());
+        Object.DestroyImmediate(sheet);
+
+        var icons = LoadOrCreate<ControlIcons>(ControlIconsPath);
+        icons.Set(Slice(path, rects));
+        EditorUtility.SetDirty(icons);
+        return icons;
     }
 
     static Sprite PaperSign(string name, string title, (string keys, string action)[] rows)
     {
         Color paper = Hex("D6D2C4");
-        int keysWidth = rows.Max(r => r.keys.Split(' ').Sum(k => PixelText.Width(k) + 6) - 2);
+        int keysWidth = rows.Max(r => r.keys.Length == 0 ? 0 : r.keys.Split(' ').Sum(k => PixelText.Width(k) + 6) - 2);
+        int textX = keysWidth > 0 ? 12 + keysWidth : 6;
         int actionsWidth = rows.Max(r => PixelText.Width(r.action));
 
         // el papel; alrededor queda sitio para su sombra en la pared y para la cinta.
         // Medidas pares: asi el cartel cae justo en la rejilla de pixeles
         const int left = 4, bottom = 6;
-        int width = Mathf.Max(18 + keysWidth + actionsWidth, PixelText.Width(title) + 16);
+        int width = Mathf.Max(textX + 6 + actionsWidth, PixelText.Width(title) + 16);
         width += width % 2;
         int height = 20 + rows.Length * 14;
         var sign = Canvas(width + 8, height + 10);
@@ -534,8 +645,9 @@ public static class LabAssets
         foreach (var (keys, action) in rows)
         {
             int x = left + 6;
-            foreach (string key in keys.Split(' ')) x = Keycap(sign, key, x, y) + 2;
-            PixelText.Draw(sign, action, left + 12 + keysWidth, y + 2, Dark);
+            if (keys.Length > 0)
+                foreach (string key in keys.Split(' ')) x = Keycap(sign, key, x, y) + 2;
+            PixelText.Draw(sign, action, left + textX, y + 2, Dark);
             y -= 14;
         }
 
@@ -560,6 +672,212 @@ public static class LabAssets
         Paint(vial, 2, 19, 10, 2, Mid3);
         Paint(vial, 2, 20, 10, 1, Light2);
         set.replicaSample = SaveSprite(vial, "Muestra_Mutageno", new Vector2(0.5f, 0.5f));
+    }
+
+    // ---------- personaje ----------
+
+    // animaciones del bicho, por el nombre de sus etiquetas en el proyecto de Pixelorama
+    public class Character
+    {
+        public Sprite[] run;          // RUN 1-8
+        public Sprite[] jump;         // JUMP 9-10: se agacha y sale
+        public Sprite[] fall;         // JUMP 11-12: arriba encogido y cayendo
+        public Sprite[] idle;         // IDLE 13-17
+        public Sprite[] cube;         // CUBO 18-22: se encoge en un cubo (lo que queda al morir una replica)
+        public Sprite[] frozenCube;   // lo mismo pero acaba en CUBO congelado (23): la copia de Ctrl
+    }
+
+    // Reduce los fotogramas de 115 px a 46 (0.4) promediando, para que el bicho vaya a los mismos 32 px por casilla
+    // que el resto del juego y mida lo mismo que su collider. El pivote va en los pies (o en la base del cubo)
+    public static Character CreateCharacter()
+    {
+        const int sourceSize = 115, size = 46, frames = 24, firstCube = 17;
+        CreateFolder("Assets/Sprites/Personaje");
+        var original = new Texture2D(2, 2);
+        original.LoadImage(File.ReadAllBytes(CharacterSource));
+        Texture2D sheet = Shrink(original, (float)size / sourceSize);
+        Object.DestroyImmediate(original);
+        File.WriteAllBytes(CharacterSheet, sheet.EncodeToPNG());
+
+        float cubeBase = LowestRow(sheet, 21 * size, size);
+        var rects = new List<SpriteRect>();
+        for (int i = 0; i < frames; i++)
+        {
+            float feet = i < firstCube ? LowestRow(sheet, i * size, size) : cubeBase;
+            rects.Add(NewRect($"Bicho_{i:D2}", new Rect(i * size, 0, size, size), new Vector2(0.5f, feet / size)));
+        }
+        Object.DestroyImmediate(sheet);
+        Sprite[] all = Slice(CharacterSheet, rects).OrderBy(sprite => sprite.name).ToArray();
+
+        return new Character
+        {
+            run = all[0..8],
+            jump = all[8..10],
+            fall = all[10..12],
+            idle = all[12..17],
+            cube = all[17..22],
+            frozenCube = new[] { all[17], all[18], all[19], all[20], all[22] },
+        };
+    }
+
+    // cada pixel nuevo es la media de los que tapa del original (los transparentes no oscurecen el borde)
+    static Texture2D Shrink(Texture2D source, float scale)
+    {
+        int width = Mathf.RoundToInt(source.width * scale), height = Mathf.RoundToInt(source.height * scale);
+        var result = Canvas(width, height);
+        Color[] pixels = source.GetPixels();
+        float step = 1f / scale;
+        for (int y = 0; y < height; y++)
+            for (int x = 0; x < width; x++)
+            {
+                float x0 = x * step, x1 = x0 + step, y0 = y * step, y1 = y0 + step;
+                Vector4 sum = Vector4.zero;
+                for (int sy = (int)y0; sy < Mathf.CeilToInt(y1); sy++)
+                    for (int sx = (int)x0; sx < Mathf.CeilToInt(x1); sx++)
+                    {
+                        float cover = (Mathf.Min(sx + 1, x1) - Mathf.Max(sx, x0)) * (Mathf.Min(sy + 1, y1) - Mathf.Max(sy, y0));
+                        Color c = pixels[sy * source.width + sx];
+                        sum += new Vector4(c.r * c.a, c.g * c.a, c.b * c.a, c.a) * cover;
+                    }
+                // casi transparente o casi opaco se redondea: bordes limpios, pero los brillos verdes se quedan suaves
+                float alpha = sum.w / (step * step);
+                if (alpha < 0.15f) continue;
+                if (alpha > 0.85f) alpha = 1f;
+                result.SetPixel(x, y, new Color(sum.x / sum.w, sum.y / sum.w, sum.z / sum.w, alpha));
+            }
+        return result;
+    }
+
+    // primera fila (desde abajo) del fotograma con algo bien opaco: donde estan los pies
+    static float LowestRow(Texture2D sheet, int left, int size)
+    {
+        for (int y = 0; y < size; y++)
+            for (int x = left; x < left + size; x++)
+                if (sheet.GetPixel(x, y).a >= 0.5f) return y;
+        return 0f;
+    }
+
+    // ---------- elementos del nivel (prefabs) ----------
+
+    static void CreateLevelElements(Set set)
+    {
+        // ascensor visto por fuera: una caja de chapa con marco, remaches y franja abajo. Los 10 px de cada borde
+        // no se estiran (9-slice), asi vale para cualquier tamaño
+        var cabin = Canvas(48, 48);
+        Paint(cabin, 0, 0, 48, 48, Dark);
+        Paint(cabin, 1, 1, 46, 46, Dark2);
+        Paint(cabin, 4, 6, 40, 36, Mid2);
+        Paint(cabin, 1, 44, 46, 3, Light);
+        Paint(cabin, 1, 47, 46, 1, Light2);
+        Paint(cabin, 1, 1, 46, 4, Dark);
+        Stripes(cabin, 2, 1, 44, 3);
+        foreach (int x in new[] { 3, 44 })
+            for (int y = 9; y < 42; y += 8) cabin.SetPixel(x, y, Light2);
+        set.elevatorCabin = SaveSprite(cabin, "Ascensor_Cabina", new Vector2(0.5f, 0.5f), new Vector4(10f, 10f, 10f, 10f));
+
+        // las puertas correderas cerradas: dos hojas, la junta en medio, ventanitas con luz calida y el piloto encima
+        var doors = Canvas(30, 46);
+        Color warm = Hex("FFB45C");
+        Paint(doors, 0, 0, 30, 40, Dark);
+        Paint(doors, 2, 0, 12, 38, Mid3);
+        Paint(doors, 16, 0, 12, 38, Mid3);
+        Paint(doors, 2, 37, 26, 1, Light2);
+        Paint(doors, 14, 0, 2, 38, Dark);
+        Paint(doors, 5, 24, 6, 8, Dark);
+        Paint(doors, 19, 24, 6, 8, Dark);
+        Paint(doors, 6, 25, 4, 6, warm);
+        Paint(doors, 20, 25, 4, 6, warm);
+        Paint(doors, 11, 41, 8, 5, Dark);
+        Paint(doors, 12, 42, 6, 3, warm);
+        set.elevatorDoors = SaveSprite(doors, "Ascensor_Puertas", new Vector2(0.5f, 0f));
+
+        // el computador de seguridad abierto: el mismo panel con lo rojo cambiado a verde
+        var panel = new Texture2D(2, 2);
+        panel.LoadImage(File.ReadAllBytes(Source + "/Barrier_Control_Panel/control_panel_idle.png"));
+        var open = Canvas(panel.width, panel.height);
+        for (int y = 0; y < panel.height; y++)
+            for (int x = 0; x < panel.width; x++)
+            {
+                Color c = panel.GetPixel(x, y);
+                if (c.r > c.g * 1.3f && c.r > c.b * 1.3f) c = new Color(c.g, c.r, c.b, c.a);
+                open.SetPixel(x, y, c);
+            }
+        Object.DestroyImmediate(panel);
+        set.terminalOpen = SaveStrip(open, "Computador_Abierto", 32, 32, new Vector2(0.5f, 0f));
+
+        // puerta de seguridad (2 de alto): chapa gruesa con remaches, junta en medio y franja de peligro
+        var door = Canvas(32, 64);
+        Paint(door, 0, 0, 32, 64, Dark);
+        Paint(door, 2, 0, 28, 64, Dark2);
+        Paint(door, 4, 2, 24, 60, Mid2);
+        Stripes(door, 4, 26, 24, 12);
+        Paint(door, 15, 0, 2, 64, Dark);
+        for (int y = 6; y < 64; y += 14)
+        {
+            door.SetPixel(6, y, Light2);
+            door.SetPixel(25, y, Light2);
+        }
+        Paint(door, 4, 61, 24, 1, Light2);
+        set.securityDoor = SaveSprite(door, "Puerta_Seguridad", new Vector2(0.5f, 0f));
+
+        // placa del suelo delante del computador (donde hay que dejar el clon) y el marco blanco que lo distingue
+        var pad = Canvas(48, 6);
+        Paint(pad, 0, 0, 48, 6, Dark);
+        Stripes(pad, 1, 1, 46, 4);
+        Paint(pad, 0, 5, 48, 1, Light2);
+        set.securityPad = SaveSprite(pad, "Placa_Computador", new Vector2(0.5f, 0f));
+
+        var frame2 = Canvas(44, 44);
+        var white = new Color(1f, 1f, 1f, 0.9f);
+        foreach (Vector2Int corner in new[] { new Vector2Int(0, 0), new Vector2Int(36, 0), new Vector2Int(0, 36), new Vector2Int(36, 36) })
+        {
+            Paint(frame2, corner.x, corner.y == 0 ? 0 : 42, 8, 2, white);
+            Paint(frame2, corner.x == 0 ? 0 : 42, corner.y, 2, 8, white);
+        }
+        set.securityFrame = SaveSprite(frame2, "Marco_Computador", new Vector2(0.5f, 0f));
+
+        // montacargas de obra: una plataforma abierta con barandas amarillas a la altura de la cintura,
+        // colgada del cable por dos tirantes que se juntan en una anilla
+        var cage = Canvas(64, 48);
+        Paint(cage, 0, 0, 64, 10, Dark);
+        Paint(cage, 1, 1, 62, 8, Mid3);
+        Stripes(cage, 1, 1, 62, 3);
+        Paint(cage, 1, 9, 62, 1, Light2);
+        for (int i = 0; i <= 28; i++)
+        {
+            int y = 32 + i * 12 / 28;
+            Paint(cage, 3 + i, y, 2, 1, Dark);
+            Paint(cage, 59 - i, y, 2, 1, Dark);
+        }
+        foreach (int x in new[] { 1, 59 })
+        {
+            Paint(cage, x, 10, 4, 24, Dark);
+            Paint(cage, x + 1, 10, 2, 24, Yellow);
+        }
+        foreach (int y in new[] { 19, 30 })
+        {
+            Paint(cage, 1, y, 62, 4, Dark);
+            Paint(cage, 2, y + 1, 60, 2, Yellow);
+        }
+        Paint(cage, 29, 43, 6, 5, Dark);
+        Paint(cage, 30, 44, 4, 3, Light);
+        set.liftCage = SaveSprite(cage, "Montacargas_Cabina", new Vector2(0.5f, 0f));
+
+        // contrapeso: chapa de carga arriba y bloques colgando debajo
+        var weight = Canvas(64, 48);
+        Paint(weight, 0, 40, 64, 8, Dark);
+        Paint(weight, 1, 41, 62, 6, Mid3);
+        Paint(weight, 1, 46, 62, 1, Light2);
+        for (int i = 0; i < 3; i++)
+        {
+            int y = 2 + i * 13;
+            Paint(weight, 6, y, 52, 12, Dark);
+            Paint(weight, 7, y + 1, 50, 10, Mid2);
+            Paint(weight, 7, y + 10, 50, 1, Light);
+        }
+        Paint(weight, 30, 0, 4, 40, Dark);
+        set.liftWeight = SaveSprite(weight, "Montacargas_Contrapeso", new Vector2(0.5f, 1f));
+
     }
 
     // tecla de teclado con las esquinas redondeadas y un pixel de sombra debajo; devuelve donde acaba
@@ -1005,7 +1323,8 @@ public static class LabAssets
                 texture.SetPixel(i, j, color);
     }
 
-    static Sprite SaveSprite(Texture2D texture, string name, Vector2 pivot)
+    // border: los pixeles de cada lado que no se estiran en modo Sliced (izquierda, abajo, derecha, arriba)
+    static Sprite SaveSprite(Texture2D texture, string name, Vector2 pivot, Vector4 border = default)
     {
         string path = $"{Generated}/{name}.png";
         File.WriteAllBytes(path, texture.EncodeToPNG());
@@ -1015,6 +1334,7 @@ public static class LabAssets
         var importer = (TextureImporter)AssetImporter.GetAtPath(path);
         SetPixelArt(importer, SpriteImportMode.Single);
         importer.spritePivot = pivot;
+        importer.spriteBorder = border;
         var settings = new TextureImporterSettings();
         importer.ReadTextureSettings(settings);
         settings.spriteAlignment = (int)SpriteAlignment.Custom;

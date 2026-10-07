@@ -97,7 +97,10 @@ public class Clone : MonoBehaviour
         if (dead) return;
         dead = true;
 
-        GameObject body = Instantiate(bodyPrefab, transform.position, Quaternion.identity);
+        // el cubo es mas bajo que el clon: aparece con la base donde tenia los pies
+        float half = bodyPrefab.GetComponent<BoxCollider2D>().size.y / 2f;
+        Vector3 at = transform.position + Vector3.down * (col.bounds.extents.y - half);
+        GameObject body = Instantiate(bodyPrefab, at, Quaternion.identity);
         if (owner != null) owner.Replace(gameObject, body);
 
         // si se estampa contra algo nada mas salir, golpe fuerte

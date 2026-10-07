@@ -6,7 +6,9 @@ using UnityEngine.Rendering.Universal;
 // Necesita un Hazard y un collider trigger (una franja fina pegada al suelo) en el mismo objeto.
 public class ElectricFloor : MonoBehaviour
 {
+    [Tooltip("Segundos con corriente")]
     [SerializeField] float onTime = 2.5f;
+    [Tooltip("Segundos sin corriente (0 = siempre con corriente)")]
     [SerializeField] float offTime = 1.5f;
     [SerializeField] SpriteRenderer arcs;
     [SerializeField] Light2D glow;
