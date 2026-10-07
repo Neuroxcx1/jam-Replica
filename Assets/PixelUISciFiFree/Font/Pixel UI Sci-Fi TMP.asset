@@ -22,8 +22,8 @@ MonoBehaviour:
     m_UnitsPerEM: 0
     m_LineHeight: 10
     m_AscentLine: 7
-    m_CapLine: 0
-    m_MeanLine: 0
+    m_CapLine: 7
+    m_MeanLine: 7
     m_Baseline: 0
     m_DescentLine: -3
     m_SuperscriptOffset: 7
@@ -32,7 +32,7 @@ MonoBehaviour:
     m_SubscriptSize: 0.5
     m_UnderlineOffset: -1
     m_UnderlineThickness: 1
-    m_StrikethroughOffset: 0
+    m_StrikethroughOffset: 2.8
     m_StrikethroughThickness: 0
     m_TabWidth: 4
   m_Material: {fileID: 5192293977591498944}

@@ -35,6 +35,8 @@ public class GameMenus : MonoBehaviour
     [SerializeField] Button resumeButton;
     [SerializeField] Button optionsButton;
     [SerializeField] Button menuButton;
+    [SerializeField] Button checkpointButton;
+
 
     [Header("Opciones")]
     [SerializeField] GameObject optionsPanel;
@@ -75,6 +77,7 @@ public class GameMenus : MonoBehaviour
         DontDestroyOnLoad(gameObject);
 
         resumeButton.onClick.AddListener(Resume);
+        checkpointButton.onClick.AddListener(ToCheckpoint);
         optionsButton.onClick.AddListener(() => OpenOptions(() => Select(optionsButton)));
         menuButton.onClick.AddListener(ToMainMenu);
         backButton.onClick.AddListener(CloseOptions);
@@ -137,6 +140,9 @@ public class GameMenus : MonoBehaviour
     void Pause()
     {
         Rumble.Stop();
+
+        checkpointButton.interactable = GameProgress.HasSave;
+
         Paused = true;
         Time.timeScale = 0f;
         Show(pausePanel);
@@ -182,6 +188,19 @@ public class GameMenus : MonoBehaviour
         pausePanel.SetActive(panel == pausePanel);
         optionsPanel.SetActive(panel == optionsPanel);
         background.SetActive(panel != null);
+    }
+
+    void ToCheckpoint()
+    {
+        if (!GameProgress.HasSave)
+        return;
+
+        Show(null);
+        
+        Paused = false;
+        Time.timeScale = 1f;
+        
+        GameProgress.ContinueGame();
     }
 
     // elige una opcion sin que suene Move (al abrir un menu o al volver a el)

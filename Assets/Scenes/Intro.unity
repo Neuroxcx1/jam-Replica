@@ -6337,9 +6337,17 @@ PrefabInstance:
       propertyPath: m_IsActive
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 1710593995452876647, guid: 1f5ab66644d54944a8d906f3d6e0437a, type: 3}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 2176350549948942295, guid: 1f5ab66644d54944a8d906f3d6e0437a, type: 3}
       propertyPath: m_Name
       value: Cartel
+      objectReference: {fileID: 0}
+    - target: {fileID: 2176350549948942295, guid: 1f5ab66644d54944a8d906f3d6e0437a, type: 3}
+      propertyPath: m_IsActive
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 2475002615405595307, guid: 1f5ab66644d54944a8d906f3d6e0437a, type: 3}
       propertyPath: m_IsActive
@@ -6870,9 +6878,9 @@ Camera:
   m_LensShift: {x: 0, y: 0}
   m_NormalizedViewPortRect:
     serializedVersion: 2
-    x: 0
+    x: 0.065910704
     y: 0
-    width: 1
+    width: 0.86809987
     height: 1
   near clip plane: 0.3
   far clip plane: 1000
@@ -22174,7 +22182,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: REPLICA
+  m_text: "SUJETO \n73"
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 22966ed4b2accbc6dd46dc36d222d833, type: 2}
   m_sharedMaterial: {fileID: 5192293977591498944, guid: 22966ed4b2accbc6dd46dc36d222d833, type: 2}
@@ -22207,9 +22215,9 @@ MonoBehaviour:
   m_enableAutoSizing: 0
   m_fontSizeMin: 18
   m_fontSizeMax: 72
-  m_fontStyle: 0
+  m_fontStyle: 3
   m_HorizontalAlignment: 1
-  m_VerticalAlignment: 4096
+  m_VerticalAlignment: 512
   m_textAlignment: 65535
   m_characterSpacing: 0
   m_characterHorizontalScale: 1
