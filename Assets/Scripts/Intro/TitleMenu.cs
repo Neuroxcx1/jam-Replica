@@ -9,6 +9,7 @@ public class TitleMenu : MonoBehaviour
 {
     [SerializeField] IntroCinematic intro;
     [SerializeField] Button startButton;
+    [SerializeField] Button continueButton;
     [SerializeField] Button optionsButton;
     [SerializeField] Button quitButton;
     [SerializeField] CanvasGroup group;
@@ -18,8 +19,11 @@ public class TitleMenu : MonoBehaviour
     {
         startButton.onClick.AddListener(Begin);
         quitButton.onClick.AddListener(Application.Quit);
+        continueButton.onClick.AddListener(Continue);
+
         if (optionsButton != null) optionsButton.onClick.AddListener(Options);
         EventSystem.current.SetSelectedGameObject(startButton.gameObject);
+        continueButton.interactable = GameProgress.HasSave;
     }
 
     // mientras estan las opciones el menu se esconde
@@ -37,9 +41,21 @@ public class TitleMenu : MonoBehaviour
 
     void Begin()
     {
+        GameProgress.ClearSave();
+
         group.interactable = false;
         intro.Begin();
         StartCoroutine(FadeOut());
+    }
+
+    void Continue()
+    {
+        if (!GameProgress.HasSave)
+            return;
+
+        group.interactable = false;
+
+        GameProgress.ContinueGame();
     }
 
     IEnumerator FadeOut()

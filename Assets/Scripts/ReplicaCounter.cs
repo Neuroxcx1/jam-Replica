@@ -1,16 +1,14 @@
 using UnityEngine;
 using UnityEngine.UI;
-using TMPro; // esta es la libreria nueva
+using TMPro; 
 
 public class ReplicaCounter : MonoBehaviour
 {
     Player player;
-    [SerializeField] TextMeshProUGUI label; //esto es nuevo
-    //Text label;
+    [SerializeField] TextMeshProUGUI label; 
+
     int shown = -1;
 
-    // se crea solo al darle Play, no hace falta ponerlo en la escena
-    //[RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
 
     static void Create()
     {
