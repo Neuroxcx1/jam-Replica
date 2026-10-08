@@ -23,6 +23,10 @@ public class ZoneDoor : MonoBehaviour
     [Tooltip("ID unico de este checkpoint. Ejemplo: Nivel1_Zona01")]
     [SerializeField] string checkpointId;
 
+    [Header("Sonido")]
+    [Tooltip("Sonido que se reproduce al cerrar la puerta y marcar el punto de control")]
+    [SerializeField] AudioClip sonidoPuntoControl; // Variable para el sonido
+
     bool closed;
     float enteredFrom;
 
@@ -49,13 +53,13 @@ public class ZoneDoor : MonoBehaviour
         blocker.enabled = true;
 
         Vector3 checkpointPosition = spawnPoint != null ? spawnPoint.position : transform.position + new Vector3(side * 1.5f, 0.5f);
-        
-        player.SetCheckpoint(checkpointPosition);
-        
-        
-        if (!string.IsNullOrEmpty(checkpointId)) GameProgress.SaveCheckpoint(checkpointId, player);
 
-        
+        player.SetCheckpoint(checkpointPosition);
+
+
+        if (!string.IsNullOrEmpty(checkpointId)) GameProgress.SaveCheckpoint(checkpointId);
+
+
         StartCoroutine(Close());
     }
 
@@ -63,11 +67,19 @@ public class ZoneDoor : MonoBehaviour
 
     IEnumerator Close()
     {
+        // --- CONTROL DE AUDIO ---
+        // Reproducir el sonido globalmente al instante en que empieza a cerrarse la puerta
+        if (sonidoPuntoControl != null && AudioManager.Instance != null)
+        {
+            AudioManager.Instance.ReproducirSonido(sonidoPuntoControl);
+        }
+        // ------------------------
+
         barrier.Play(closingFrames, false);
         yield return new WaitUntil(() => barrier.Finished);
 
         barrier.Play(closedFrames, true);
-        
+
         if (doorLight != null) doorLight.color = closedColor;
 
         CameraFollow.Shake(shakePixels, 0.2f);
@@ -78,7 +90,7 @@ public class ZoneDoor : MonoBehaviour
     // ni provocar el temblor de camara.
     public void RestoreCheckpoint(Player player)
     {
-       if (player == null)
+        if (player == null)
             return;
 
         if (spawnPoint == null)
@@ -100,7 +112,7 @@ public class ZoneDoor : MonoBehaviour
 
         if (doorLight != null)
             doorLight.color = closedColor;
-        
+
         Vector3 position = spawnPoint.position;
 
         // Convertimos este punto en el checkpoint del Player.
@@ -113,7 +125,7 @@ public class ZoneDoor : MonoBehaviour
         player.ClearJumpTimers();
 
         Debug.Log($"Checkpoint restaurado: {checkpointId}");
- 
+
     }
 
     void OnDrawGizmos()

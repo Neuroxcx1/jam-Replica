@@ -22,6 +22,16 @@ public class SecurityLaser : MonoBehaviour
 
     float timer;
 
+    // --- NUEVO: Referencia al AudioSource ---
+    AudioSource audioSource;
+
+    void Awake()
+    {
+        // Obtenemos el componente al iniciar
+        audioSource = GetComponent<AudioSource>();
+    }
+    // ----------------------------------------
+
     // el receptor va donde el rayo choca con la pared: asi el prefab vale para cualquier altura
     void Start()
     {
@@ -37,6 +47,23 @@ public class SecurityLaser : MonoBehaviour
         beam.enabled = on;
         impact.gameObject.SetActive(on);
         beamLight.enabled = on;
+
+        // --- CONTROL DE AUDIO ---
+        if (audioSource != null)
+        {
+            // Si el láser está encendido y el audio NO está sonando, reprodúcelo
+            if (on && !audioSource.isPlaying)
+            {
+                audioSource.Play();
+            }
+            // Si el láser está apagado y el audio SÍ está sonando, detenlo
+            else if (!on && audioSource.isPlaying)
+            {
+                audioSource.Stop();
+            }
+        }
+        // ------------------------
+
         if (!on) return;
 
         Vector2 origin = transform.position;

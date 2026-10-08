@@ -16,9 +16,14 @@ public class ElectricFloor : MonoBehaviour
     Collider2D zone;
     float timer;
 
+    // Referencia al AudioSource que agregaste en el Inspector
+    AudioSource audioSource;
+
     void Awake()
     {
         zone = GetComponent<Collider2D>();
+        // Obtenemos el componente al iniciar
+        audioSource = GetComponent<AudioSource>();
     }
 
     void Update()
@@ -28,5 +33,20 @@ public class ElectricFloor : MonoBehaviour
         zone.enabled = on;
         arcs.enabled = on;
         glow.enabled = on;
+
+        // --- CONTROL DE AUDIO ---
+        if (audioSource != null)
+        {
+            // Si la trampa está encendida y el sonido NO está sonando, reprodúcelo
+            if (on && !audioSource.isPlaying)
+            {
+                audioSource.Play();
+            }
+            // Si la trampa está apagada y el sonido SÍ está sonando, detenlo
+            else if (!on && audioSource.isPlaying)
+            {
+                audioSource.Stop();
+            }
+        }
     }
 }

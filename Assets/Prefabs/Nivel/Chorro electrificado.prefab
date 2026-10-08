@@ -15,7 +15,7 @@ GameObject:
   - component: {fileID: 8781410915796266961}
   - component: {fileID: 5393831076667015023}
   - component: {fileID: 4633099508940735499}
-  - component: {fileID: -3959539942016962079}
+  - component: {fileID: 876823546187144773}
   m_Layer: 2
   m_Name: Chorro electrificado
   m_TagString: Untagged
@@ -207,7 +207,7 @@ MonoBehaviour:
   waitRange: {x: 0.3, y: 1.5}
   pulseSpeed: 0
   sound: {fileID: 0}
---- !u!82 &-3959539942016962079
+--- !u!82 &876823546187144773
 AudioSource:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -221,14 +221,14 @@ AudioSource:
   m_Resource: {fileID: 8300000, guid: 1c24bcb85adeed9499959eb967f0d8bc, type: 3}
   m_PlayOnAwake: 1
   m_Volume: 1
-  m_Pitch: -0.06
+  m_Pitch: 1
   Loop: 1
   Mute: 0
   Spatialize: 0
   SpatializePostEffects: 0
-  Priority: 128
+  Priority: 182
   DopplerLevel: 1
-  MinDistance: 10
+  MinDistance: 5
   MaxDistance: 20
   Pan2D: 0
   rolloffMode: 1

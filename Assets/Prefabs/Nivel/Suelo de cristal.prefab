@@ -5048,7 +5048,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::FragileGlass
   maxLoad: 1
+  resetOnRespawn: 0
   glass: {fileID: 1138245136919048602}
   cracked: {fileID: 21300000, guid: 6d6ba8e942b98944592a6544937c2b11, type: 3}
   shards: {fileID: 4637050815589430581}
   shakePixels: 4
+  sonidoRomper: {fileID: 8300000, guid: ce33df9a5ad809249a012ccf9eaea29c, type: 3}
+  sonidoRajar: {fileID: 8300000, guid: 189c8aa68abbb5547a65cebb7e4fc563, type: 3}
