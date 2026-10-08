@@ -309,6 +309,11 @@ public class Player : MonoBehaviour
         maxReplicas += amount;
         ReplicasLeft += amount;
     }
+    public void RestoreMaxReplicas(int savedMax)
+    {
+        maxReplicas = savedMax;
+        ReplicasLeft = maxReplicas;
+    }
 
     // te devuelve la replica mas antigua que pusiste, en el mismo orden en que las pusiste
     void Recall()

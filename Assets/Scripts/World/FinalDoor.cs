@@ -94,7 +94,9 @@ public class FinalDoor : MonoBehaviour
             return;
 
         // el jugador ya no hace nada, asi que la K (reiniciar) la mira esta puerta
-        if (InputSystem.actions.FindAction("Restart").WasPressedThisFrame())
-            SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
+        if (Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame)
+        {
+            GameMenus.Instance.GoToMainMenu();
+        }
     }
 }

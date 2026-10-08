@@ -34,8 +34,9 @@ public class GameMenus : MonoBehaviour
     [SerializeField] GameObject pausePanel;
     [SerializeField] Button resumeButton;
     [SerializeField] Button optionsButton;
-    [SerializeField] Button menuButton;
     [SerializeField] Button checkpointButton;
+    [SerializeField] Button menuButton;
+    
 
 
     [Header("Opciones")]
@@ -177,6 +178,13 @@ public class GameMenus : MonoBehaviour
     }
 
     void ToMainMenu()
+    {
+        Resume();
+        IntroCinematic.ShowMenuAgain();
+        SceneManager.LoadScene("Intro");
+    }
+
+    public void GoToMainMenu()
     {
         Resume();
         IntroCinematic.ShowMenuAgain();

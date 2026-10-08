@@ -10,6 +10,7 @@ public static class GameProgress
     const string HasSaveKey = "Game.HasSave";
     const string SceneKey = "Game.Scene";
     const string CheckpointKey = "Game.Checkpoint";
+    const string MaxReplicasKey = "Game.MaxReplicas";
 
     static bool restoring;
 
@@ -30,11 +31,14 @@ public static class GameProgress
     public static bool HasSave =>
         PlayerPrefs.GetInt(HasSaveKey, 0) == 1;
 
-    public static void SaveCheckpoint(string checkpointId)
+    public static void SaveCheckpoint(string checkpointId,  Player player)
     {
         PlayerPrefs.SetInt(HasSaveKey, 1);
         PlayerPrefs.SetString(SceneKey, SceneManager.GetActiveScene().name);
         PlayerPrefs.SetString(CheckpointKey, checkpointId);
+        
+        if (player != null) PlayerPrefs.SetInt(MaxReplicasKey, player.MaxReplicas);
+        
         PlayerPrefs.Save();
 
         Debug.Log($"Progreso guardado: {SceneManager.GetActiveScene().name} / {checkpointId}");
@@ -58,6 +62,7 @@ public static class GameProgress
         PlayerPrefs.DeleteKey(HasSaveKey);
         PlayerPrefs.DeleteKey(SceneKey);
         PlayerPrefs.DeleteKey(CheckpointKey);
+        PlayerPrefs.DeleteKey(MaxReplicasKey);
         PlayerPrefs.Save();
 
         Debug.Log("Progreso eliminado.");
@@ -91,8 +96,7 @@ public static class GameProgress
 
         string checkpointId = PlayerPrefs.GetString(CheckpointKey, "");
 
-        // Si no hay checkpoint, simplemente dejamos al jugador
-        // en el inicio normal de la escena.
+        // Si no hay checkpoint, simplemente dejamos al jugador en el inicio normal de la escena.
         if (string.IsNullOrEmpty(checkpointId))
             return;
 
@@ -104,6 +108,13 @@ public static class GameProgress
             return;
         }
 
+        int savedMaxReplicas = PlayerPrefs.GetInt(
+            MaxReplicasKey,
+            player.MaxReplicas
+        );
+
+        player.RestoreMaxReplicas(savedMaxReplicas);
+
         ZoneDoor[] doors = Object.FindObjectsByType<ZoneDoor>(FindObjectsInactive.Include);
 
         foreach (ZoneDoor door in doors)
@@ -114,6 +125,7 @@ public static class GameProgress
                 return;
             }
         }
+
 
         Debug.LogWarning(
             $"No se encontró la ZoneDoor con checkpoint ID '{checkpointId}' " +
