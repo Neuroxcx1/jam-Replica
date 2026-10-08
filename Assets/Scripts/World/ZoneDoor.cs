@@ -57,7 +57,7 @@ public class ZoneDoor : MonoBehaviour
         player.SetCheckpoint(checkpointPosition);
 
 
-        if (!string.IsNullOrEmpty(checkpointId)) GameProgress.SaveCheckpoint(checkpointId);
+        if (!string.IsNullOrEmpty(checkpointId)) GameProgress.SaveCheckpoint(checkpointId, player);
 
 
         StartCoroutine(Close());
