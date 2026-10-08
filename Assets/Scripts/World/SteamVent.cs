@@ -20,12 +20,25 @@ public class SteamVent : MonoBehaviour
     [SerializeField] LayerMask blockers;
     [SerializeField] ParticleSystem steam;
 
+    [Header("Audio")]
+    [Tooltip("Velocidad a la que el sonido se desvanece (Fade Out) al apagarse")]
+    [SerializeField] float fadeOutSpeed = 2f;
+
     float timer;
+    AudioSource audioSource;
+    float maxVolume; // Guardará el volumen original establecido en el Inspector
 
     void Awake()
     {
         var main = steam.main;
         main.startSpeed = jetSpeed;
+
+        // Obtenemos el componente y guardamos el volumen original
+        audioSource = GetComponent<AudioSource>();
+        if (audioSource != null)
+        {
+            maxVolume = audioSource.volume;
+        }
     }
 
     void Update()
@@ -34,6 +47,36 @@ public class SteamVent : MonoBehaviour
         float t = (timer + startDelay) % (onTime + offTime);
         bool on = t < onTime;
         bool warning = !on && t > onTime + offTime - warningTime;
+
+        // --- CONTROL DE AUDIO CON FADE OUT ---
+        if (audioSource != null)
+        {
+            if (on)
+            {
+                // Restaura el volumen máximo y reproduce si no estaba sonando
+                audioSource.volume = maxVolume;
+                if (!audioSource.isPlaying)
+                {
+                    audioSource.Play();
+                }
+            }
+            else
+            {
+                // Si el vapor se detuvo pero el audio sigue sonando, reducimos el volumen gradualmente
+                if (audioSource.isPlaying)
+                {
+                    audioSource.volume -= fadeOutSpeed * Time.deltaTime;
+
+                    // Cuando el volumen llega a 0, detenemos el clip por completo
+                    if (audioSource.volume <= 0f)
+                    {
+                        audioSource.Stop();
+                        audioSource.volume = maxVolume; // Lo preparamos para el siguiente ciclo
+                    }
+                }
+            }
+        }
+        // -------------------------------------
 
         Vector2 origin = transform.position;
         Vector2 direction = transform.up;

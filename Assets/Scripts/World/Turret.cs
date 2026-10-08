@@ -31,13 +31,20 @@ public class Turret : MonoBehaviour
     [SerializeField] Color sightColor = new Color(1f, 0.2f, 0.15f, 0.7f);
     [SerializeField] float shakePixels = 2f;
 
+    [Header("Audio")]
+    [SerializeField] AudioClip sonidoApuntar;
+    [SerializeField] AudioClip sonidoDisparar;
+
     Mode mode;
     float timer;
     float boltTimer;
     Vector2 aim;
+    AudioSource audioSource;
 
     void Awake()
     {
+        // Obtenemos el componente al iniciar
+        audioSource = GetComponent<AudioSource>();
         Face();
     }
 
@@ -92,6 +99,23 @@ public class Turret : MonoBehaviour
     {
         mode = next;
         timer = time;
+
+        // --- CONTROL DE AUDIO ESTADOS ---
+        if (audioSource != null)
+        {
+            // Si empieza a cargar el disparo, iniciamos el sonido de apuntar
+            if (mode == Mode.Charging && sonidoApuntar != null)
+            {
+                audioSource.clip = sonidoApuntar;
+                audioSource.Play();
+            }
+            // Si vuelve a estado inactivo (perdió de vista al jugador), apagamos el sonido
+            else if (mode == Mode.Idle)
+            {
+                audioSource.Stop();
+            }
+        }
+        // --------------------------------
     }
 
     // el dibujo y el cañon al lado que mira
@@ -150,6 +174,14 @@ public class Turret : MonoBehaviour
 
     void Fire()
     {
+        // --- AUDIO DISPARO ---
+        if (audioSource != null && sonidoDisparar != null)
+        {
+            audioSource.Stop(); // Callamos el sonido de carga
+            audioSource.PlayOneShot(sonidoDisparar); // Reproducimos el disparo una única vez
+        }
+        // ---------------------
+
         RaycastHit2D hit = Shoot();
         if (hit) Hazard.Kill(hit.collider.gameObject);
 

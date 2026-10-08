@@ -187,6 +187,7 @@ MonoBehaviour:
   amount: 1
   visual: {fileID: 5677171849445215548}
   collectEffect: {fileID: 4453531028751473373, guid: 3af028a50891ea845882466c12351bff, type: 3}
+  sonidoRecoger: {fileID: 8300000, guid: adee2081fd87e8249bcfb96c9be25b78, type: 3}
 --- !u!1 &4201452727636155084
 GameObject:
   m_ObjectHideFlags: 0
